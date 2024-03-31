@@ -66,7 +66,7 @@ It's a 'smart' window manager: it keeps track of a list of 'invalid' rectangles 
    - It's missing bits like 'zooming' (TODO), and 'resizing' (TODO).
    - It doesn't do transparent windows.
 
-The lack of transparency is by design, it draws windows 'top down' to optimize clipping. Adding transparency wouldn't be hard, but I'd have to draw the windows 'bottom up' to handle blending, and we'd revert back to drawing a lot of stuff for very little return. You can always alpha-blend the whole *ui* 'screen' to wherever you want, so it's not like you can't have transparency.
+The lack of transparency is by design: it draws windows 'top down' to optimize clipping. Adding transparency wouldn't be hard, but I'd have to draw the windows 'bottom up' to handle blending, and we'd revert back to drawing a lot of stuff for very little return. You can always alpha-blend the whole *ui* 'screen' to wherever you want, so it's not like you can't have transparency.
 
 ## Menu Manager
 libmui has a menu bar, menus, checkmarks, keyboard shortcuts, all that stuff. Made to looks like System 7, Mac OS 8, or GS/OS. This was the most complicated bit to do, and it's still not perfect -- turns out the original had quite a few features that are not obvious at first glance.
