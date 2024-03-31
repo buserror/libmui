@@ -51,8 +51,7 @@ Well, in terms of looks, it's kinda like I started with MacOS8/9, but removed al
 
 In terms of of the API, one massive change is that it is fully asynchronous, and you *can't* just spinloop and draw things in a window or GrafPort whenever you feel like it, like on the original. Instead, you change the state of the UI, and it will redraw itself when it needs to. This is a lot more like modern UI libraries in that respect.
 
-If, like me, you were a developer back then, many things will look familiar. I tried to use most of the names of things as is; and I even have all the
-elements drawn by WDEF, CDEF, LDEF functions, which is fun. It's also pretty easy to customize by adding your own, just like in the old days.
+If, like me, you were a developer back then, many things will look familiar. I tried to use most of the names of things as is; and I even have all the elements drawn by WDEF, CDEF, LDEF functions, which is fun. It's also pretty easy to customize by adding your own, just like in the old days.
 
 Also, for the API, it's all 'callback' based. No more polling. You don't have
 to 'ask' the UI if something happened, it will tell you when it does. This is
