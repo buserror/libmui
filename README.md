@@ -62,10 +62,12 @@ It can create windows, and it can draw into them. It has up to 15 'layers', and 
 
 I deliberately limited the number of coordinate systems to 2, like the old one, so you get the 'screen coordinates' and the 'window content coordinates'. I was half-tempted to create a fully hierarchical system, but I realized it wasn't really needed and would just make things more complicated.
 
-It's a 'smart' window manager, it keeps track of an 'invalid' list of rectangles, and clips to that when redrawing, so it doesn't redraw the whole window every time, yeah, like the original. None of that 'lets redraw absolutely everything every frame' stuff like Immediate Mode UIs.
+It's a 'smart' window manager: it keeps track of a list of 'invalid' rectangles and clips to that when redrawing, so it doesn't redraw the whole window every time, yeah, just like the original. None of that 'lets redraw absolutely everything every frame' stuff like immediate mode UIs. However:
+
    - It's missing bits like 'zooming' (TODO), and 'resizing' (TODO).
-   - It doesn't do transparent windows. It is by design, it draws windows 'top down' to optimize clipping -- adding transparency wouldn't be hard, but I'd have to draw the windows 'bottom up' to handle blending, and we'd revert back to drawing a lot of stuff for very little return.
-   - Also, you can always alpha blend the whole *ui* 'screen' to wherever you want, so it's not like you can't have transparency.
+   - It doesn't do transparent windows.
+
+The lack of transparency is by design, it draws windows 'top down' to optimize clipping. Adding transparency wouldn't be hard, but I'd have to draw the windows 'bottom up' to handle blending, and we'd revert back to drawing a lot of stuff for very little return. You can always alpha-blend the whole *ui* 'screen' to wherever you want, so it's not like you can't have transparency.
 
 ## Menu Manager
 Menubar, menus, checkmarks, keyboard shortcuts, all that stuff. Made to looks like System 7/8, or GS/OS. This was the most complicated bit to do, and it's still not perfect -- turns out the original had quite a few features that are not obvious at first glance.
