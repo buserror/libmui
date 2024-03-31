@@ -70,11 +70,11 @@ It's a 'smart' window manager: it keeps track of a list of 'invalid' rectangles 
 The lack of transparency is by design, it draws windows 'top down' to optimize clipping. Adding transparency wouldn't be hard, but I'd have to draw the windows 'bottom up' to handle blending, and we'd revert back to drawing a lot of stuff for very little return. You can always alpha-blend the whole *ui* 'screen' to wherever you want, so it's not like you can't have transparency.
 
 ## Menu Manager
-Menubar, menus, checkmarks, keyboard shortcuts, all that stuff. Made to looks like System 7/8, or GS/OS. This was the most complicated bit to do, and it's still not perfect -- turns out the original had quite a few features that are not obvious at first glance.
+libmui has a menu bar, menus, checkmarks, keyboard shortcuts, all that stuff. Made to looks like System 7, Mac OS 8, or GS/OS. This was the most complicated bit to do, and it's still not perfect -- turns out the original had quite a few features that are not obvious at first glance.
    - It has hierarchical menus, they don't behave *perfectly* like the original yet, I'll have to revisit that for a better match.
    - It's missing displaying and scrolling super large popups (TODO).
-   + It will call your 'action' callback when you click on a menu item, or when you press the key of a keyboard shortcut. Easy, peasy.
-   + There is half baked support for sticky menus, but it's disabled for now as it's not quite right yet.
+   - It will call your 'action' callback when you click on a menu item, or when you press the key of a keyboard shortcut. Easy peasy.
+   - There is half baked support for sticky menus, but it's disabled for now as it's not quite right yet.
 
 ## Control Manager
 Buttons, checkboxes, radio buttons, scrollbars (vertical), wrapping textboxes, all that stuff.
