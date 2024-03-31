@@ -77,9 +77,10 @@ libmui has a menu bar, menus, checkmarks, keyboard shortcuts, all that stuff. Ma
    - There is half baked support for sticky menus, but it's disabled for now as it's not quite right yet.
 
 ## Control Manager
-Buttons, checkboxes, radio buttons, scrollbars (vertical), wrapping textboxes, all that stuff.
+Buttons, checkboxes, radio buttons, vertical scrollbars, wrapping textboxes, all that stuff.
    - It's missing bits like Edit Field (Work in Progress), and a Slider.
-   - There IS a prototype version of a text edit control, but it's not quite right yet -- works fine for a one liner etc, but not for a multi line text box. Not far off tho.
+   - There *is* a prototype version of a text edit control, but it's not quite right yet: works fine for a single line, but not for a multi line text box. Not far off, though.
+
 ## List Manager
 More or less hard coded to display filenames so far, but plain lists are actually easier than this so. Handle arrow keys/page up/down, scroll wheel, etc.
    - It's missing a way to 'compress' the font and/or use ellipsis abreviations (TODO) when the item text is too long.
