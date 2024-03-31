@@ -35,8 +35,7 @@ It is designed to draw into a 'screen' that is an ARGB buffer. You can then copy
    * In the 'example' folder, the playground demo copies it to an X11 window via a XCB 'shared' pixmap, so works great even via remote X11.
 The library is 'smart', like the old OSes: it keeps track of 'invalid' regions, and only redraws what is needed, so there's very very little overdraw.
 
-One small drawback is that the output *has* to be ARGB -- so if you want to render say on a 16 bit framebuffer, you'll have to do the conversion yourself.
-Luckily, you only have to draw/convert the 'dirty' regions, so it's not too bad.
+One small drawback is that the output *must* be ARGB, so if you want to render on (for example) a 16-bit framebuffer, you'll have to do the conversion yourself. Luckily, you only have to draw/convert the 'dirty' regions, so it's not too bad.
 
 It could be possible to 'vectorize' the rendering to vertice buffers and stuff, but really, it's not needed. It's fast enough as it is and it would fall back the 'lets redraw everything' behaviour of the immediate mode UI libraries.
 
