@@ -130,7 +130,7 @@ To build the tests/demos/samples, you'll need:
 # How do I use it?
 Well the best way is to hack around *mui_shell.c* and *mui_widgets_demo.c*. It's a simple window with a few buttons and stuff, and it's a good place to start.
 
-The cool thing about ui_mui_shell is that it loads mui_widgets_demo.so as a *plugin* and auto-reload it if it detects a change. So you can hack around mui_widgets_demo.c, and it will reload it and run it again! You can code a new dialog insanely fast with that, pretty must as fast as you would with a resource editor.
+The cool thing about ui_mui_shell is that it loads mui_widgets_demo.so as a *plugin* and auto-reloads it if it detects a change. So you can hack around mui_widgets_demo.c, and it will reload it and run it again! You can code a new dialog insanely fast with that, pretty must as fast as you would with a resource editor.
 
 A good trick is to use 'make watch' on the *libmui* directory in a terminal tab, and it will rebuild the library and the mui_shell automatically when you change something, that with the 'auto save' of your editor, and you will have a constantly building/running mui_shell as you hack around.
 
