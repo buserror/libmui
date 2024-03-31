@@ -105,7 +105,7 @@ It has the classic 'Open' a file dialog. Haven't needed the other one yet. This 
 </center>
 
 ## Resource Manager
-Nope! Not there; I'd need some sort of ResEdit and stuff -- and now that is *ONE* Feature Creep Too Far thank you very much.
+Nope! Not there. I'd need some sort of ResEdit and stuff, and that is *ONE* Feature Creep Too Far thank you very much.
 I have a vague idea of making some sort of MessagePack format for resources, but that's for another day.
 
 # So, what *are* the dependencies?
