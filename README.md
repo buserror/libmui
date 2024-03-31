@@ -109,15 +109,15 @@ Nope! Not there. I'd need some sort of ResEdit and stuff, and that is *ONE* Feat
 I have a vague idea of making some sort of MessagePack format for resources, but that's for another day.
 
 # So, what *are* the dependencies?
-Well, *external* dependencies are just *libpixman* -- that's it. It's a library that does pixel pushing, it's used everywhere, it's massively optimized, and it has 'regions' which are super useful for clipping -- they aren't *as good* as the regions in QuickDraw, but they are good enough.
+Well, *external* dependencies are just *libpixman* -- that's it. It's a library that does pixel pushing, it's used everywhere, it's massively optimized, and it has 'regions', which are super useful for clipping. They aren't *as good* as the regions in QuickDraw, but they are good enough.
 
 Other bits I used to make it are rolled into the source code anyway, so it's not like you need to install them.
 * libpixman: as mentioned, you'll need libpixman-dev installed.
-* [libcg](https://github.com/xboot/libcg): a small antialiased renderer that looks vaguely like *cairo* but comes in just 2 files, with a nice licence. It's likely far from being the most optimized, but it's largely good enough.
-* [stb_truetype.h](https://github.com/nothings/stb): a small library to load truetype fonts, it's used to load the system fonts.
-* stb_ttc.h: my own extension to stb_truetype.h, makes up a font/glyph dictionary with hash tables, font textures etc.
+* [libcg](https://github.com/xboot/libcg): a small antialiased renderer that looks vaguely like *cairo* but comes in just 2 files, with a nice license. It's likely far from being the most optimized, but it's largely good enough.
+* [stb_truetype.h](https://github.com/nothings/stb): a small library to load Truetype fonts, it's used to load the system fonts.
+* stb_ttc.h: my own extension to stb_truetype.h. Makes up a font/glyph dictionary with hash tables, font textures etc.
 
-That's it, all the other bits I already had 'in stock' -- the 2D geometry bits I made 25+ years ago, they were rolled in [libc3](https://github.com/buserror/simreprap) as well.
+That's it. All the other bits I already had 'in stock' -- the 2D geometry bits I made 25+ years ago, they were rolled in [libc3](https://github.com/buserror/simreprap) as well.
 
 # How do I build it?
 It's a simple Makefile, so you just need to do a 'make' in the root directory. It will build the library, and the tests/demos/samples.
