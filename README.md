@@ -2,7 +2,7 @@
 # What the hell is this?
 This is a contender for the World Record for Feature Creep Side Project. It is pretty high in the contender list as it's a bolt on to *another* contender for the World Record for Feature Creep Side Project (the [MII Apple //e emulator](http://github.com/buserror/mii_emu)).
 
-It is a library that duplicates a lot of a Macintosh Classic "Toolbox" APIs. It is not a complete implementation, but it is enough to make a few simple applications, also, all the bits I needed for the MII emulator.
+It's a library that duplicates a lot of a Macintosh Classic "Toolbox" APIs. It's not a complete implementation, but it's enough to make a few simple applications, including all the bits I needed for the MII emulator.
 
 <center>
    <img src="doc/widgets.gif" alt="10 second demo">
@@ -10,9 +10,9 @@ It is a library that duplicates a lot of a Macintosh Classic "Toolbox" APIs. It 
 </center>
 
 # Why?
-Well I wanted a UI library for MII -- something without tons of dependencies, and I didn't want the typical 'game like' style with "Arrow Keys + Return + Escape" sort of menus.
+I wanted a UI library for MII -- something without tons of dependencies, and I didn't want the typical 'game like' style with "Arrow Keys + Return + Escape" sort of menus.
 
-I started with Nuklear immediate mode UI, but it both looks super ugly, AND is very limited as soon as you want to do something 'custom', and I didn't see myself hacking into that codebase. One thing I particularly dislike is the 'layout' engine that decides to put stuff where it wants, and it's *never* in the 'right' place, like a hard case of 'computer say so' -- the typical result is something like Programmer's Art, just worse. That's why Linux On The Deskop is famous for it's Pixel Perfection polished UIs. *Cough*.
+I started with Nuklear immediate mode UI, but it both looks super ugly, AND is very limited as soon as you want to do something 'custom', and I didn't see myself hacking into that codebase. One thing I particularly dislike is the 'layout' engine that decides to put stuff where it wants, and it's *never* in the 'right' place, like a hard case of 'computer say so' -- the typical result is something like Programmer's Art, just worse. That's why Linux On The Deskop is famous for it's polished \*cough\* Pixel Perfect UIs.
 
 The other thing I don't like with the trendy IM UIs is that they promise you that you don't have to keep a separate state around blah blah, however they forget to mention that there *is* a state kept for you, based on hash values, and if you are unlucky enough to have a hash clash, you're screwed. I've seen that happen in real life, and it's not pretty to debug.
 
