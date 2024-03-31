@@ -1,0 +1,67 @@
+# Makefile
+#
+# Copyright (C) 2024 Michel Pollet <buserror@gmail.com>
+#
+# SPDX-License-Identifier: MIT
+
+LIBMUI 			?= ../
+
+# for bsd_queue.h and incbin.h
+#MII 			?= $(LIBMUI)..
+#CPPFLAGS		+= -I$(MII)/libmish/src -I$(MII)/contrib
+CPPFLAGS		+= -I$(LIBMUI)contrib
+
+BUILD_DIR		?= $(LIBMUI)
+
+O 				:= $(BUILD_DIR)build-$(shell $(CC) -dumpmachine)
+BIN 			:= $(O)/bin
+OBJ 			:= $(O)/obj/libmui
+LIB 			:= $(O)/lib
+
+CPPFLAGS		+= -I$(LIBMUI)src
+CPPFLAGS		+= -I$(LIBMUI)mui_shell
+CPPFLAGS		+= ${shell pkg-config --cflags pixman-1}
+LDLIBS			+= ${shell pkg-config --libs pixman-1}
+
+MUI_VERSION		:= ${shell \
+						echo $$(git describe --tags --abbrev=0 2>/dev/null || \
+							echo "(dev)") \
+						$$(git log -1 --date=short --pretty="%h %cd")}
+CPPFLAGS		+= -DMUI_VERSION="\"$(MUI_VERSION)\""
+
+OPTIMIZE		?= -O0 -g
+CFLAGS			+= --std=gnu99 -Wall -Wextra
+CFLAGS			+= $(OPTIMIZE)
+CFLAGS			+= -Wno-unused-parameter -Wno-unused-function
+# PIC is necessary for the shared library/plugin to work
+CFLAGS 			+= -fPIC
+
+#CFLAGS 			+= -fsanitize=address
+#LDFLAGS			+= -fsanitize=address
+#LDLIBS			+=
+
+ifeq ($(V),1)
+Q :=
+else
+Q := @
+endif
+
+# use a .temp file, otherwise the mui_shell tries to reload before the file
+# is fully written, and it fails.
+# the ${filter} are there to make the sure object files are linked before the .a
+$(LIB)/%.so : $(OBJ)/%.o $(LIB)/libmui.a | $(O)
+	@echo "  LDSO      $@"
+	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -shared -fPIC -o $@.temp \
+			${filter %.o, $^} ${filter %.a, $^} $(LDLIBS) && \
+		mv $@.temp $@
+
+$(OBJ)/%.o		: %.c | $(OBJ)
+	@echo "  CC" ${filter -O%, $(CPPFLAGS) $(CFLAGS)} "$<"
+	$(Q)$(CC) -MMD $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
+
+$(BIN)/%			:  | $(BIN)
+	@echo "  LD      $@"
+	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+$(O) $(OBJ) $(BIN) $(LIB):
+	@mkdir -p $@

@@ -1,0 +1,8 @@
+.bash_history
+build-*
+.vscode
+compile_commands.json
+cachegrind.out.*
+callgrind.out.*
+.cache
+*_scrot.png
