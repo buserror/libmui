@@ -124,7 +124,7 @@ It's a simple Makefile, so you just need to do a 'make' in the root directory. I
 To build the tests/demos/samples, you'll need:
 * xcb xcb-shm xcb-randr xkbcommon-x11 -- this is just to run the 'mui_shell' demo, which is a simple window with a few buttons and stuff.
 ## Nvidia Driver gotcha
-* *Note* that if you use the nvidia binary driver (I do), you will need to add a flag to your config, otherwise the mui_shell won't work.
+* *Note* that if you use the Nvidia binary driver (I do), you will need to add a flag to your config, otherwise the mui_shell won't work.
    - Add: 'Option \"AllowSHMPixmaps\" \"1\"' to the "Device"  In your /etc/X11/xorg.conf file.
 
 # How do I use it?
