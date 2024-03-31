@@ -16,7 +16,7 @@ I started with Nuklear immediate mode UI, but it both looks super ugly, AND is v
 
 The other thing I don't like with the trendy IM UIs is that they promise you that you don't have to keep a separate state around blah blah, however they forget to mention that there *is* a state kept for you, based on hash values, and if you are unlucky enough to have a hash clash, you're screwed. I've seen that happen in real life, and it's not pretty to debug.
 
-I miss the days were UIs were /crafted/, not just decided for you by a bad layout engine with huge rectangular flat buttons and no sense whatsoever of design or usability.
+I miss the days were UIs were *crafted*, not just decided for you by a bad layout engine with huge rectangular flat buttons and no sense whatsoever of design or usability.
 
 Also, I realized I had quite a few bits that I could use to make my own library anyway, so I started to do that.
 
