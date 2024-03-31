@@ -49,8 +49,7 @@ It could be possible to 'vectorize' the rendering to vertice buffers and stuff, 
 # How does it differ from the original?
 Well, in terms of looks, it's kinda like I started with MacOS8/9, but removed all the grayscale bits. Bizarrely, I think System 7 'flat' look has aged better than the 'grayscale' look of 8/9, so I went with that. Most of the visible differences are related to the dialog's popup menus, which are a lot more 'Mac OS 8' than 'System 7'. The scrollbar is definitely more GS/OS though, I never understood why it took so long for macOS to adopt that.
 
-In terms of of the API, one massive change is that it is fully asynchronous, and
-you *can't* just spinloop and draw things in a window or GrafPort whenever you feel like it, like on the original. Instead, you change the state of the UI, and it will redraw itself when it needs to. This is a lot more like modern UI libraries in that respect.
+In terms of of the API, one massive change is that it is fully asynchronous, and you *can't* just spinloop and draw things in a window or GrafPort whenever you feel like it, like on the original. Instead, you change the state of the UI, and it will redraw itself when it needs to. This is a lot more like modern UI libraries in that respect.
 
 Many things will look familiar, if like me you were a developer back then,
 I tried to use most of the names of things as is; and I even have all the
