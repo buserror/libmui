@@ -12,7 +12,7 @@ It is a library that duplicates a lot of a Macintosh Classic "Toolbox" APIs. It 
 # Why?
 Well I wanted a UI library for MII -- something without tons of dependencies, and I didn't want the typical 'game like' style with "Arrow Keys + Return + Escape" sort of menus.
 
-I started with Nuklear immediate mode UI, but it both look super ugly, AND is very limited as soon as you want to do something 'custom', and I didn't see myself hacking into that codebase. One thing I particularly dislike is the 'layout' engine that decide to put stuff where it wants, and it's *never* in the 'right' place, like a hard case of 'computer say so' -- typicaly result into
+I started with Nuklear immediate mode UI, but it both looks super ugly, AND is very limited as soon as you want to do something 'custom', and I didn't see myself hacking into that codebase. One thing I particularly dislike is the 'layout' engine that decide to put stuff where it wants, and it's *never* in the 'right' place, like a hard case of 'computer say so' -- typicaly result into
 something like Programmer's Art, just worse. That's why Linux On The Deskop is famous for it's Pixel Perfection polished UIs. *Cough*.
 
 The other things I don't like with the trendy IM UIs is that they promise you that you don't have to keep a separate state around blah blah, however they forget to mention that there IS a state kept for you, based on hash values, and if you are unlucky enough to have a hash clash, you are screwed. I've seen that happen in real life, and it's not pretty to debug.
