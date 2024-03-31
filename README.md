@@ -53,9 +53,7 @@ In terms of of the API, one massive change is that it is fully asynchronous, and
 
 If, like me, you were a developer back then, many things will look familiar. I tried to use most of the names of things as is; and I even have all the elements drawn by WDEF, CDEF, LDEF functions, which is fun. It's also pretty easy to customize by adding your own, just like in the old days.
 
-Also, for the API, it's all 'callback' based. No more polling. You don't have
-to 'ask' the UI if something happened, it will tell you when it does. This is
-also a lot more like modern UI libraries.
+Also, for the API, it's all 'callback' based. No more polling. You don't have to 'ask' the UI if something happened, it will tell you when it does. This is also a lot more like modern UI libraries.
 
 It is also a lot simpler than the original in concept; everything is either a *mui_window* (Well, windows, menubars and menus) OR a *mui_control* (Menu titles, menu items, everything in windows, even separator lines).
 
