@@ -73,7 +73,7 @@ libmui has a menu bar, menus, checkmarks, keyboard shortcuts, all that stuff. Ma
    - It has hierarchical menus, they don't behave *perfectly* like the original yet, I'll have to revisit that for a better match.
    - It's missing displaying and scrolling super large popups (TODO).
    - It will call your 'action' callback when you click on a menu item, or when you press the key of a keyboard shortcut. Easy peasy.
-   - There is half baked support for sticky menus, but it's disabled for now as it's not quite right yet.
+   - There is half-baked support for sticky menus, but it's disabled for now as it's not quite right yet.
 
 ## Control Manager
 Buttons, checkboxes, radio buttons, vertical scrollbars, wrapping textboxes, all that stuff.
