@@ -2,7 +2,7 @@
 # What the hell is this?
 This is a contender for the World Record for Feature Creep Side Project. It is pretty high in the contender list as it's a bolt on to *another* contender for the World Record for Feature Creep Side Project (the [MII Apple //e emulator](http://github.com/buserror/mii_emu)).
 
-It is a library that duplicate a lot of a Macintosh Classic "Toolbox" APIs. It is not a complete implementation, but it is enough to make a few simple applications, also, all the bits I needed for the MII emulator.
+It is a library that duplicates a lot of a Macintosh Classic "Toolbox" APIs. It is not a complete implementation, but it is enough to make a few simple applications, also, all the bits I needed for the MII emulator.
 
 <center>
    <img src="doc/widgets.gif" alt="10 seconds demo">
