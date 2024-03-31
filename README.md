@@ -38,7 +38,7 @@ The library is 'smart', like the old OSes: it keeps track of 'invalid' regions, 
 One small drawback is that the output *has* to be ARGB -- so if you want to render say on a 16 bit framebuffer, you'll have to do the conversion yourself.
 Luckily, you only have to draw/convert the 'dirty' regions, so it's not too bad.
 
-It could be possible to 'vectorize' the rendering to vertice buffers and stuff, but really, it's not needed, it's fast enough as it is and it would fall back the 'lets redraw everything' behaviour of the IMmediate UI libraries.
+It could be possible to 'vectorize' the rendering to vertice buffers and stuff, but really, it's not needed. It's fast enough as it is and it would fall back the 'lets redraw everything' behaviour of the immediate mode UI libraries.
 
 <center>
    <img src="doc/static_text.png" alt="Basic text boxes">
