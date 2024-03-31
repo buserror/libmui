@@ -60,7 +60,7 @@ It is also a lot simpler than the original in concept: everything is either a *m
 ## Window Manager
 It can create windows, and it can draw into them. It has up to 15 'layers', and can do clipping and stuff. Got the typical 'BringToFront' behaviour, and you can drag windows around.
 
-I deliberately limited the number of coordinate systems to 2 -- like the old one; so you get the 'screen coordinates' and the 'window content coordinates'. I was half tempted to create a fully hierarchical system, but realized it was really not neeeded, and would just make things more complicated.
+I deliberately limited the number of coordinate systems to 2, like the old one, so you get the 'screen coordinates' and the 'window content coordinates'. I was half-tempted to create a fully hierarchical system, but I realized it wasn't really needed and would just make things more complicated.
 
 It's a 'smart' window manager, it keeps track of an 'invalid' list of rectangles, and clips to that when redrawing, so it doesn't redraw the whole window every time, yeah, like the original. None of that 'lets redraw absolutely everything every frame' stuff like Immediate Mode UIs.
    - It's missing bits like 'zooming' (TODO), and 'resizing' (TODO).
