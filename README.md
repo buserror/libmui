@@ -82,9 +82,10 @@ Buttons, checkboxes, radio buttons, vertical scrollbars, wrapping textboxes, all
    - There *is* a prototype version of a text edit control, but it's not quite right yet: works fine for a single line, but not for a multi line text box. Not far off, though.
 
 ## List Manager
-More or less hard coded to display filenames so far, but plain lists are actually easier than this so. Handle arrow keys/page up/down, scroll wheel, etc.
+More or less hard-coded to display filenames so far, but plain lists are actually easier to implement than this, so ... (TODO). It handles arrow keys/page up/down, scroll wheel, etc.
    - It's missing a way to 'compress' the font and/or use ellipsis abreviations (TODO) when the item text is too long.
-   + You CAN use 'typeahead' to find the item you want, like the original.
+   + You can use type-ahead to find the item you want, like the original.
+
 ## Alerts
 It has the typical 'Cancel'+'OK' alert.
    - Could do with more types of alerts (TODO).
