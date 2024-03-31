@@ -12,9 +12,9 @@ It's a library that duplicates a lot of a Macintosh Classic "Toolbox" APIs. It's
 # Why?
 I wanted a UI library for MII -- something without tons of dependencies, and I didn't want the typical 'game like' style with "Arrow Keys + Return + Escape" sort of menus.
 
-I started with Nuklear immediate mode UI, but it both looks super ugly, AND is very limited as soon as you want to do something 'custom', and I didn't see myself hacking into that codebase. One thing I particularly dislike is the 'layout' engine that decides to put stuff where it wants, and it's *never* in the 'right' place, like a hard case of 'computer say so' -- the typical result is something like Programmer's Art, just worse. That's why Linux On The Deskop is famous for polished \*cough\* Pixel Perfect UIs.
+I started with a Nuklear immediate mode UI, but it both looks super ugly, AND is very limited as soon as you want to do something 'custom', and I didn't see myself hacking into that codebase. One thing I particularly dislike is the 'layout' engine that decides to put stuff where it wants, and it's *never* in the 'right' place, like a hard case of 'computer say so' -- the typical result is something like Programmer's Art, just worse. That's why Linux On The Deskop is famous for polished \*cough\* Pixel Perfect UIs.
 
-The other thing I don't like with the trendy IM UIs is that they promise you that you don't have to keep a separate state around blah blah, however they forget to mention that there *is* a state kept for you, based on hash values, and if you are unlucky enough to have a hash clash, you're screwed. I've seen that happen in real life, and it's not pretty to debug.
+The other thing I don't like with the trendy immediate mode UIs is that they promise you that you don't have to keep a separate state around blah blah, however they forget to mention that there *is* a state kept for you, based on hash values, and if you are unlucky enough to have a hash clash, you're screwed. I've seen that happen in real life, and it's not pretty to debug.
 
 I miss the days were UIs were *crafted*, not just decided for you by a bad layout engine with huge rectangular flat buttons and no sense whatsoever of design or usability.
 
