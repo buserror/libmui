@@ -123,9 +123,9 @@ That's it. All the other bits I already had 'in stock' -- the 2D geometry bits I
 It's a simple Makefile, so you just need to do a 'make' in the root directory. It will build the library, and the tests/demos/samples.
 To build the tests/demos/samples, you'll need:
 * xcb xcb-shm xcb-randr xkbcommon-x11 -- this is just to run the 'mui_shell' demo, which is a simple window with a few buttons and stuff.
-## Nvidia Driver gotcha
+## Nvidia driver gotcha
 * *Note* that if you use the Nvidia binary driver (I do), you will need to add a flag to your config, otherwise the mui_shell won't work.
-   - Add: 'Option \"AllowSHMPixmaps\" \"1\"' to the "Device"  In your /etc/X11/xorg.conf file.
+   - Add: `Option "AllowSHMPixmaps" "1"` to the "Device" in your `/etc/X11/xorg.conf` file.
 
 # How do I use it?
 Well the best way is to hack around *mui_shell.c* and *mui_widgets_demo.c*. It's a simple window with a few buttons and stuff, and it's a good place to start.
@@ -136,14 +136,14 @@ A good trick is to use 'make watch' on the *libmui* directory in a terminal tab,
 
 Have fun!
 
-# FAQ!
-  * Ok so, is there a dark mode?
+# FAQ
+  * OK, so is there a dark mode?
      - nope
-  * Fine, but at least it is themable, right?
+  * Fine, but at least it's themeable, right?
      - nope
-  * Tranparent Windows and a Cube Effect ?!@?!
+  * Transparent windows and a cube effect?!@?!
      - nope
-  * What, menu aren't sticky? They don't stay up when you release the mouse button? Common throw us a bone here man, it's 2023!
+  * The menus aren't sticky? They don't stay up when you release the mouse button? C'mon, throw us a bone here, man, it's 2023!
      - nope
   * But, is it at least using the super trendy tools? cmake? meson? ninja?
      - nope
@@ -151,10 +151,10 @@ Have fun!
      - nope
   * Are there any bindings for any of the fancy new languages? Rust? Go? Python?
      - nope
-  * Is it using any of the super trendy framerworks? GTK? QT?
+  * Is it using any of the super trendy frameworks? GTK? QT?
      - nope
-  * What about SDL? It's cross Platform, it is Ugly Everywhere Equally!
+  * What about SDL? It's cross-platform, and Equally Ugly Everywhere!
      - nope
-  * And Wayland then? Wayland is The Future after all!
+  * Wayland, then? Wayland is The Future after all!
      - nope
 <center><h1>Now, GET OFF MY LAWN!</h1></center>
