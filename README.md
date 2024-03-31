@@ -94,7 +94,7 @@ It has the typical 'Cancel'+'OK' alert.
 </center>
 
 ## Standard File
-It has the classic 'Open' a file dialog. Haven't needed the other one yet. This was one of the primary goals of the UI library to start with, so I spent quite a bit of time getting it 'right', and I'm quite happy with how it turned out.
+It has the classic 'Open' a file dialog. Haven't needed the other one yet. This was one of the primary goals of the UI library to start with, so I spent quite a bit of time getting it right, and I'm quite happy with how it turned out.
    - Could do with a 'Save' dialog (TODO).
    - It has an extra popup with the last few used directories.
    - You can use arrow keys, page up/down, and you can even type-ahead to the file you want, like in the old macOS!
