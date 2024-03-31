@@ -58,7 +58,7 @@ Also, for the API, it's all 'callback' based. No more polling. You don't have to
 It is also a lot simpler than the original in concept: everything is either a *mui_window* (well, windows, menubars and menus); OR a *mui_control* (menu titles, menu items, everything in windows, even separator lines).
 
 ## Window Manager
-It can create windows, and it can draw into them. Has up to 15 'layers', and can do clipping and stuff. Got the typical 'BringToFront' behaviour, and you can drag windows around.
+It can create windows, and it can draw into them. It has up to 15 'layers', and can do clipping and stuff. Got the typical 'BringToFront' behaviour, and you can drag windows around.
 
 I deliberately limited the number of coordinate systems to 2 -- like the old one; so you get the 'screen coordinates' and the 'window content coordinates'. I was half tempted to create a fully hierarchical system, but realized it was really not neeeded, and would just make things more complicated.
 
