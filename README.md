@@ -31,7 +31,7 @@ Also, I like making my own toys. There, happy now?
 Well, it has a few of the classic 'managers' that the Macintosh Toolbox or the later GS/OS had. However it behaves more like a modern system, it's not 'synchronous' like the old toolbox. Stuff gets redrawn even if you are clicking/dragging etc without having to 'do it yourself'.
 
 It is designed to draw into a 'screen' that is an ARGB buffer. You can then copy that to wherever you fancy.
-   * In the case of MII, it's an OpenGL texture that gets overlayed;
+   * In the case of MII, it's an OpenGL texture that gets overlaid.
    * In the 'example' folder, the playground demo copies it to an X11 window via a XCB 'shared' pixmap, so works great even via remote X11.
 The library is 'smart', like the old OSes, it keeps track of 'invalid' regions, and only redraws what is needed, so theres very very little overdraw.
 
