@@ -28,7 +28,7 @@ Also, I like making my own toys. There, happy now?
 </center>
 
 # What can it do?
-Well, it has a few of the classic 'managers' that the Macintosh Toolbox or the later GS/OS had. However it behaves more like a modern system, it's not 'synchronous' like the old toolbox. Stuff gets redrawn even if you are clicking/dragging etc without having to 'do it yourself'.
+Well, it has a few of the classic 'managers' that the Macintosh Toolbox or the later GS/OS had. However, it behaves more like a modern system: it's not 'synchronous' like the old toolbox. Stuff gets redrawn even if you are clicking/dragging etc without having to 'do it yourself'.
 
 It is designed to draw into a 'screen' that is an ARGB buffer. You can then copy that to wherever you fancy.
    * In the case of MII, it's an OpenGL texture that gets overlaid.
