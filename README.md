@@ -5,7 +5,7 @@ This is a contender for the World Record for Feature Creep Side Project. It is p
 It is a library that duplicates a lot of a Macintosh Classic "Toolbox" APIs. It is not a complete implementation, but it is enough to make a few simple applications, also, all the bits I needed for the MII emulator.
 
 <center>
-   <img src="doc/widgets.gif" alt="10 seconds demo">
+   <img src="doc/widgets.gif" alt="10 second demo">
    <i>10 seconds demo</i>
 </center>
 
