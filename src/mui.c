@@ -12,6 +12,10 @@
 
 #include "mui_priv.h"
 
+#ifdef __NetBSD__
+extern int ffsl(long int i);
+#endif
+
 void
 mui_init(
 		mui_t *ui)

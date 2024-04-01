@@ -22,6 +22,15 @@ ifeq ($(IS_SUBMODULE),)
 all				: tests
 endif
 
+ifneq ($(shell uname -s),NetBSD)
+LINK_DL = -ldl
+endif
+
+ifeq ($(shell uname -s),NetBSD)
+CFLAGS += -I/usr/X11R7/include -I/usr/pkg/include
+LDFLAGS += -L/usr/X11R7/lib -L/usr/pkg/lib -Wl,-R/usr/X11R7/lib -Wl,-R/usr/pkg/lib
+endif
+
 MUI_OBJ			:= ${patsubst %, $(OBJ)/%, ${notdir ${MUI_SRC:.c=.o}}}
 TARGET_LIB		:= $(LIB)/libmui.a
 
@@ -46,7 +55,7 @@ $(OBJ)/mui_shell.o : CPPFLAGS += -DUI_HAS_XCB=1 -DUI_HAS_XKB=1
 $(BIN)/mui_shell : LDLIBS += $(shell pkg-config --libs \
 								xcb xcb-shm xcb-randr \
 								xkbcommon-x11)
-$(BIN)/mui_shell : LDLIBS += -lm -ldl
+$(BIN)/mui_shell : LDLIBS += -lm $(LINK_DL)
 $(BIN)/mui_shell : $(OBJ)/mui_shell.o $(LIB)/libmui.a
 
 clean :

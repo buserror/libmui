@@ -13,7 +13,11 @@ mui_time_t
 mui_get_time()
 {
 	struct timespec tim;
+#ifdef __NetBSD__
+	clock_gettime(CLOCK_MONOTONIC, &tim);
+#else
 	clock_gettime(CLOCK_MONOTONIC_RAW, &tim);
+#endif
 	uint64_t time = ((uint64_t)tim.tv_sec) * (1000000 / MUI_TIME_RES) +
 						tim.tv_nsec / (1000 * MUI_TIME_RES);
 	return time;
@@ -38,3 +42,15 @@ mui_hash(
 	hash += hash << 5;
 	return hash;
 }
+
+#ifdef __NetBSD__
+int
+ffsl(
+	long int i)
+{
+	for(unsigned long int counter = 0; counter < sizeof(long int); counter++){
+		if((i >> counter) & 1) return counter + 1;
+	}
+	return 0;
+}
+#endif
