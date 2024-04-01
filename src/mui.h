@@ -404,8 +404,9 @@ struct cg_surface_t;
 struct cg_ctx_t;
 
 /*
- * Describes a pixmap. Currently only used for the screen destination pixels.
- * And really, only bpp:32 for ARGB is supported.
+ * Describes a pixmap.
+ * And really, only bpp:32 for ARGB is supported, OR 8bpp for alpha masks.
+ * (Alpha mask is used for text rendering)
  */
 typedef struct mui_pixmap_t {
 	uint8_t * 					pixels;
@@ -477,9 +478,9 @@ DECLARE_C_ARRAY(mui_drawable_t *, mui_drawable_array, 4);
 /*
  * Drawable related
  */
-/* create a new mui_draware of size w x h, bpp depth.
+/* create a new mui_drawable of size w x h, bpp depth.
  * Optionally allocate the pixels if pixels is NULL. Allocated pixels
- * are not cleared. */
+ * are not cleared to white/zero. */
 mui_drawable_t *
 mui_drawable_new(
 		c2_pt_t 		size,
@@ -695,7 +696,7 @@ mui_font_measure(
  * to be used exclusively with mui_font_measure.
  * Draw the lines and glyphs returned by mui_font_measure, with the
  * given color and flags.
- * The significan flags here are no longer the text aligment, but
+ * The significant flags here are no longer the text aligment, but
  * how to render them:
  * + MUI_TEXT_STYLE_BOLD will draw each glyphs twice, offset by 1 pixel
  * + MUI_TEXT_STYLE_ULINE will draw a line under the text glyphs, unless
@@ -808,8 +809,7 @@ mui_window_create(
 		uint32_t 		instance_size);
 // Dispose of a window and it's content (controls).
 /*
- * Note: if an action is in progress the window is not freed immediately
- * but added to the zombie list, and freed when the action is done.
+ * Note: if the window is 'locked' the window is not freed immediately.
  * This is to prevent re-entrance problems. This allows window actions to
  * delete their own window without crashing.
  */
@@ -834,13 +834,13 @@ mui_window_front(
 bool
 mui_window_select(
 		mui_window_t *	win);
-// call the window action callback, if any
+// call the window action callback(s), if any
 void
 mui_window_action(
 		mui_window_t * 	c,
 		uint32_t 		what,
 		void * 			param );
-// add an action callback for this window
+// Add an action callback for this window
 void
 mui_window_set_action(
 		mui_window_t * 	c,
@@ -872,7 +872,7 @@ typedef struct mui_menu_item_t {
 	uint32_t 					index: 9;
 	uint32_t 					uid;
 	char * 						title;
-	// curertnly only supported for menu titles
+	// currently only supported for menu titles
 	const uint32_t *			color_icon;		// optional, ARGB colors
 	char  						mark[8];		// UTF8 -- Charcoal
 	char						icon[8];		// UTF8 -- Wider, icon font

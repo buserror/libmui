@@ -747,6 +747,7 @@ _mui_menu_create(
 							items);
 
 	c2_rect_t frame = mui_menu_get_enclosing_rect(ui, items);
+	frame.b += 3;	// tweaked to match the popup frame height
 	c2_rect_t on_screen = frame;
 	c2_rect_offset(&on_screen, origin.x, origin.y);
 
@@ -779,7 +780,7 @@ _mui_menu_create(
 		mui_menu_item_t * item = &items[i];
 		item->index = i;
 		c2_rect_t title_rect = frame;
-		title_rect.t = item->location.y - 1;
+		title_rect.t = item->location.y;
 		if (items[i+1].title)
 			title_rect.b = items[i+1].location.y;
 		else
