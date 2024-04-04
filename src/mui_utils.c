@@ -13,7 +13,7 @@ mui_time_t
 mui_get_time()
 {
 	struct timespec tim;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &tim);
+	clock_gettime(CLOCK_MONOTONIC, &tim);
 	uint64_t time = ((uint64_t)tim.tv_sec) * (1000000 / MUI_TIME_RES) +
 						tim.tv_nsec / (1000 * MUI_TIME_RES);
 	return time;
