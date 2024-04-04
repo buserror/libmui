@@ -43,10 +43,19 @@ $(TARGET_LIB) : $(MUI_OBJ) | $(LIB)
 # on X11. Also, allows partial updates to be tested properly
 #
 $(OBJ)/mui_shell.o : CPPFLAGS += -DUI_HAS_XCB=1 -DUI_HAS_XKB=1
+ifeq ($(shell uname),NetBSD)
+# NetBSD requirements
+$(OBJ)/mui_shell.o : CPPFLAGS += $(shell pkg-config --cflags xorg-server xkbcommon)
+$(BIN)/mui_shell : LDLIBS += $(shell pkg-config --libs xorg-server)
+endif
+
 $(BIN)/mui_shell : LDLIBS += $(shell pkg-config --libs \
-								xcb xcb-shm xcb-randr \
-								xkbcommon-x11)
-$(BIN)/mui_shell : LDLIBS += -lm -ldl
+								xcb xcb-shm xcb-image \
+								xkbcommon xkbcommon-x11)
+$(BIN)/mui_shell : LDLIBS += -lm
+ifeq ($(shell uname),Linux)
+$(BIN)/mui_shell : LDLIBS += -ldl
+endif
 $(BIN)/mui_shell : $(OBJ)/mui_shell.o $(LIB)/libmui.a
 
 clean :
