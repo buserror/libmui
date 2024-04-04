@@ -48,10 +48,11 @@ typedef struct mui_xcb_t {
 	float 				ui_scale_x, ui_scale_y;
 	c2_pt_t				size;
 	xcb_connection_t *	xcb;
+	xcb_image_t *		xcb_image;	// if no shared memory
 	xcb_shm_segment_info_t shm;
 	xcb_window_t 		window;
 	xcb_pixmap_t 		xcb_pix;
-	xcb_gcontext_t 		xcb_context;
+	xcb_gcontext_t 		xcb_win_gc;
 	struct xkb_state *	xkb_state;
 
 	int 				redraw;
@@ -176,14 +177,16 @@ mui_xcb_init(
 	xcb_shm_query_version_reply_t *xcb_shm_present;
 	xcb_shm_present = xcb_shm_query_version_reply(
 					ui->xcb, xcb_shm_query_version(ui->xcb), NULL);
+	bool slow_path = false;
 	if (!xcb_shm_present || !xcb_shm_present->shared_pixmaps) {
 		printf("xcb_shm error... %p\n", xcb_shm_present);
 		printf("If using nvidia driver, you need\n"
 				"    Option	   \"AllowSHMPixmaps\" \"1\"\n"
 				"  In your /etc/X11/xorg.conf file\n");
-		exit(0);
-	}
-	printf("XCB Shared memory present\n");
+		slow_path = true;
+	//	exit(0);
+	} else
+		printf("XCB Shared memory present\n");
 
 	_mui_xcb_init_keyboard(ui);
 
@@ -227,29 +230,62 @@ mui_xcb_init(
 	value_mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
 	value_list[0] = screen->white_pixel;
 	value_list[1] = 0;
-	ui->xcb_context = xcb_generate_id(ui->xcb);
+	ui->xcb_win_gc = xcb_generate_id(ui->xcb);
 	xcb_create_gc(
-			ui->xcb, ui->xcb_context, ui->window, value_mask, value_list);
+			ui->xcb, ui->xcb_win_gc, ui->window, value_mask, value_list);
 	// map the window onto the screen
 	xcb_map_window(ui->xcb, ui->window);
 	// wont show unless I do this
 	xcb_flush(ui->xcb);
-	ui->shm.shmid = shmget(IPC_PRIVATE,
-							pix->size.x * pix->size.y * 4, IPC_CREAT | 0777);
-	ui->shm.shmaddr = shmat(ui->shm.shmid, 0, 0);
-	ui->shm.shmseg = xcb_generate_id(ui->xcb);
-	xcb_shm_attach(ui->xcb, ui->shm.shmseg, ui->shm.shmid, 0);
-	shmctl(ui->shm.shmid, IPC_RMID, 0);
 
-	ui->xcb_pix = xcb_generate_id(ui->xcb);
-	xcb_shm_create_pixmap(
-				ui->xcb, ui->xcb_pix, ui->window,
-				pix->size.x, pix->size.y,
-				screen->root_depth,
-						ui->shm.shmseg, 0);
+	if (!slow_path) {
+		xcb_generic_error_t *error;
+		xcb_void_cookie_t cook;
+		ui->shm.shmid = shmget(IPC_PRIVATE,
+								pix->size.x * pix->size.y * 4, IPC_CREAT | 0666);
+		ui->shm.shmaddr = shmat(ui->shm.shmid, 0, 0);
+		ui->shm.shmseg = xcb_generate_id(ui->xcb);
+		xcb_shm_attach_checked(ui->xcb, ui->shm.shmseg, ui->shm.shmid, 0);
+		error = xcb_request_check(ui->xcb, cook);
+		if (error) {
+			fprintf(stderr, "XCB: Error xcb_shm_attach_checked: %d\n",
+					error->error_code);
+			free(error);
+//			xcb_disconnect(ui->xcb);
+		//	return 1;
+		}
+		shmctl(ui->shm.shmid, IPC_RMID, 0);
 
-	pix->pixels = ui->shm.shmaddr;
-	pix->row_bytes = pix->size.x * 4;
+		ui->xcb_pix = xcb_generate_id(ui->xcb);
+		cook = xcb_shm_create_pixmap_checked(
+					ui->xcb, ui->xcb_pix, ui->window,
+					pix->size.x, pix->size.y,
+					screen->root_depth,
+					ui->shm.shmseg, 0);
+		error = xcb_request_check(ui->xcb, cook);
+		if (error) {
+			fprintf(stderr, "XCB: Error xcb_shm_create_pixmap: %d\n",
+					error->error_code);
+			free(error);
+		} else
+			pix->pixels = ui->shm.shmaddr;
+		pix->row_bytes = pix->size.x * 4;
+	}
+	if (!pix->pixels) {
+		printf("XCB: Not using SHM, slow path\n");
+		pix->pixels = malloc(pix->size.x * pix->size.y * 4);
+
+		ui->xcb_pix = xcb_generate_id(ui->xcb);
+		xcb_create_pixmap(
+				ui->xcb, screen->root_depth, ui->xcb_pix, ui->window,
+				pix->size.x, pix->size.y);
+		ui->xcb_image = xcb_image_create_native(
+				ui->xcb, pix->size.x, pix->size.y, XCB_IMAGE_FORMAT_Z_PIXMAP,
+				screen->root_depth, pix->pixels,
+				pix->size.x * pix->size.y * 4, pix->pixels);
+		pix->row_bytes = pix->size.x * 4;
+	}
+	xcb_flush(ui->xcb);
 //	printf("%s pix is %p\n", __func__, pix->pixels);
 	ui->redraw = 1;
 	return &ui->ui;
@@ -278,6 +314,7 @@ mui_read_clipboard(
 int
 mui_xcb_poll(
 		struct mui_t * mui,
+		mui_drawable_t * dr,
 		bool redrawn)
 {
 	mui_xcb_t * ui = (mui_xcb_t *)mui;
@@ -343,7 +380,7 @@ mui_xcb_poll(
 			case XCB_BUTTON_PRESS: {
 				xcb_button_press_event_t *m =
 						(xcb_button_press_event_t *)event;
-#if 0
+#if 1
 				printf("%s %s %02x %d at %4dx%4d\n", __func__,
 						(event->response_type & ~0x80) == XCB_BUTTON_PRESS ?
 								"down" : "up",
@@ -402,7 +439,12 @@ mui_xcb_poll(
 				break;
 			case XCB_EXPOSE: {
 			//	xcb_expose_event_t *expose_event = (xcb_expose_event_t*) event;
-				ui->redraw++;
+//				ui->redraw++;
+				xcb_expose_event_t *x = (xcb_expose_event_t*) event;
+         		xcb_copy_area(
+						ui->xcb, ui->xcb_pix,
+						ui->window, ui->xcb_win_gc,
+						x->x, x->y, x->x, x->y, x->width, x->height);
 			}	break;
 			default:
 				// Handle other events
@@ -424,10 +466,24 @@ mui_xcb_poll(
 	//		printf("XCB: %d rects to redraw\n", rc);
 			for (int i = 0; i < rc; i++) {
 				c2_rect_t r = ra[i];
-	//			printf("XCB: %d,%d %dx%d\n", r.l, r.t, c2_rect_width(&r), c2_rect_height(&r));
+			//	printf("XCB: %d,%d %dx%d\n", r.l, r.t, c2_rect_width(&r), c2_rect_height(&r));
+
+				// cannot update the exact rectangle, just window-wide strips
+				if (ui->xcb_image) {
+					mui_pixmap_t * pix = &dr->pix;
+					xcb_put_image(
+							ui->xcb, XCB_IMAGE_FORMAT_Z_PIXMAP,
+							ui->xcb_pix, ui->xcb_win_gc,
+							pix->size.x, c2_rect_height(&r),
+							0, r.t, 0, 24,
+							c2_rect_height(&r) * pix->row_bytes,
+							(uint8_t*)pix->pixels + (r.t * pix->row_bytes) /*+ r.l * 4*/);
+				}
 				xcb_copy_area(
-						ui->xcb, ui->xcb_pix, ui->window, ui->xcb_context,
-						r.l, r.t, r.l, r.t, c2_rect_width(&r), c2_rect_height(&r));
+						ui->xcb, ui->xcb_pix,
+						ui->window, ui->xcb_win_gc,
+						r.l, r.t, r.l, r.t,
+						c2_rect_width(&r), c2_rect_height(&r));
 			}
 		}
 		pixman_region32_clear(&mui->redraw);
@@ -532,7 +588,7 @@ main(
 		mui_run(mui);
 		if (ui->plug && ui->plug->draw)
 			draw = ui->plug->draw(mui, ui->plug_data, &dr, false);
-		if (mui_xcb_poll(mui, draw))
+		if (mui_xcb_poll(mui, &dr, draw))
 			break;
 		mui_time_t now = mui_get_time();
 		while (stamp < now)
