@@ -251,7 +251,7 @@ mui_timer_register(
 		return -1;
 	}
 	//printf("%s: delay %d\n", __func__, delay);
-	int ti = ffsl(~ui->timer.map) - 1;
+	int ti = __builtin_ffsl(~ui->timer.map) - 1;
 	ui->timer.map |= 1 << ti;
 	ui->timer.timers[ti].cb = cb;
 	ui->timer.timers[ti].param = param;
@@ -292,7 +292,7 @@ mui_timers_run(
 	uint64_t now = mui_get_time();
 	uint64_t map = ui->timer.map;
 	while (map) {
-		int ti = ffsl(map) - 1;
+		int ti = __builtin_ffsl(map) - 1;
 		map &= ~(1 << ti);
 		if (ui->timer.timers[ti].when > now)
 			continue;
