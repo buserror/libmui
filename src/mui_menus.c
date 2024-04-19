@@ -663,7 +663,7 @@ mui_menubar_add_menu(
 
 	for (int ii = 1; items[ii].title; ii++)
 		sub_count++;
-	menu->menu.count = count -1 ;
+	menu->menu.count = sub_count ;
 	menu->menu.e = items + 1;
 	menu->menu.read_only = 1;
 

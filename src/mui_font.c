@@ -15,6 +15,7 @@
 #include "stb_ttc.h"
 
 
+//#ifndef __wasm__
 #define INCBIN_STYLE INCBIN_STYLE_SNAKE
 #define INCBIN_PREFIX mui_
 #include "incbin.h"
@@ -23,6 +24,7 @@ INCBIN(main_font, "fonts/Charcoal_mui.ttf");
 INCBIN(icon_font, "fonts/typicon.ttf");
 INCBIN(dingbat_font, "fonts/Dingbat.ttf");
 INCBIN(geneva_font, "fonts/Geneva.ttf");
+//#endif
 
 #include "mui.h"
 
@@ -79,12 +81,14 @@ mui_font_init(
 		mui_t *ui)
 {
 //	printf("%s: Loading fonts\n", __func__);
+#ifndef __wasm__
 	mui_font_from_mem(ui, "main", 28,
 			mui_main_font_data, mui_main_font_size);
 	mui_font_from_mem(ui, "icon_large", 96,
 			mui_icon_font_data, mui_icon_font_size);
 	mui_font_from_mem(ui, "icon_small", 30,
 			mui_icon_font_data, mui_icon_font_size);
+#endif
 }
 
 void
@@ -212,6 +216,8 @@ mui_font_measure(
 						MUI_COMPACT_FACTOR : 1.0;
 	float narrow = flags & MUI_TEXT_STYLE_NARROW ?
 						MUI_NARROW_ADVANCE_FACTOR : 1.0;
+	float narrow_space = flags & MUI_TEXT_STYLE_NARROW ?
+						narrow * 0.9 : 1.0;
 	mui_glyph_array_t * line = NULL;
 	do {
 		const mui_glyph_array_t zero = {};
@@ -241,6 +247,7 @@ mui_font_measure(
 						ch, cp, cp < 32 ? '.' : cp, state,
 						lines->count-1, line->count);
 			if (cp == '\n') {
+				line->line_break = true;
 				ch++;
 				break;
 			}
@@ -258,8 +265,9 @@ mui_font_measure(
 			if (gc->p_y == (unsigned short) -1)
 				stb_ttc__ScaledGlyphRenderToCache(ttc, gc);
 			float advance = gc->advance * narrow;
+			// we make spaces even narrower (if narrow style is on)
 			if (cp == ' ')
-				advance *= 0.9;
+				advance *= narrow_space;
 			if (((line->w + advance) * scale) > c2_rect_width(&bbox)) {
 				if (wrap_count) {
 					ch = wrap_chi + 1;
@@ -281,6 +289,15 @@ mui_font_measure(
 	//				g.x, g.w);
 			line->w += advance;
 		};
+		if (line->line_break) {
+			// stuff a newline here
+			mui_glyph_t g = {
+				.glyph = 0,
+				.pos = ch,
+				.x = (line->w) * scale,
+			};
+			mui_glyph_array_push(line, g);
+		}
 	// zero terminate the line, so there is a marker at the end
 		mui_glyph_t g = {
 			.glyph = 0,
@@ -312,10 +329,19 @@ mui_font_measure(
 	for (uint i = 0; i < lines->count; i++) {
 		mui_glyph_array_t * line = &lines->e[i];
 		line->y += ydiff;
+		if (i == lines->count - 1)	// last line is always a break
+			line->line_break = true;
 		if (flags & MUI_TEXT_ALIGN_RIGHT) {
 			line->x = c2_rect_width(&bbox) - line->w;
 		} else if (flags & MUI_TEXT_ALIGN_CENTER) {
 			line->x = (c2_rect_width(&bbox) - line->w) / 2;
+		} else if (flags & MUI_TEXT_ALIGN_FULL) {
+			line->x = 0;
+			if (line->count > 1 && !line->line_break) {
+				float space = (c2_rect_width(&bbox) - line->w) / (line->count - 1);
+				for (uint ci = 1; ci < line->count; ci++)
+					line->e[ci].x += ci * space;
+			}
 		}
 		if (line->x < (int)lines->margin_left)
 			lines->margin_left = line->x;

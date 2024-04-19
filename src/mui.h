@@ -18,6 +18,10 @@
 #include <pixman.h>
 #include "c2_arrays.h"
 
+#ifdef __wasm__
+typedef unsigned int uint;
+#endif
+
 #if 0 // only use to debug queue macros; do not enable
 #define _KERNEL
 #define INVARIANTS
@@ -235,8 +239,11 @@ typedef union mui_key_equ_t {
 		(mui_key_equ_t){ .mod = (_mask), .key = (_key) }
 
 struct mui_t;
+struct mui_control_t;
+struct mui_window_t;
 
-/*
+
+/*!
  * References allows arbitrary code to keep a 'handle' on either
  * a window or a control. This is used for example to keep track of
  * the currently focused control.
@@ -270,6 +277,11 @@ typedef struct mui_ref_t {
 	mui_deref_p					 deref;
 } _mui_ref_t;	// this is not a 'user' type.
 
+/*
+ * Window and Control references
+ * While these two count technically be a union, I've deciced for separate
+ * types to enforce the type checking.
+ */
 typedef struct mui_window_ref_t {
 	_mui_ref_t 					ref;
 	struct mui_window_t * 		window;
@@ -280,7 +292,13 @@ typedef struct mui_control_ref_t {
 	struct mui_control_t * 		control;
 } mui_control_ref_t;
 
-// if 'ref' is NULL a new one is allocated, will be freed on deref()
+/*!
+ * Initializes a reference to 'control', with the (optional) kind.
+ * if 'ref' is NULL a new reference is allocated and returned, will be
+ * freed on deref().
+ * 'kind' is an optional arbitrary value that can be used to identify
+ * the reference, it has no meaning to the library.
+ */
 mui_control_ref_t *
 mui_control_ref(
 		mui_control_ref_t *		ref,
@@ -289,7 +307,13 @@ mui_control_ref(
 void
 mui_control_deref(
 		mui_control_ref_t *		ref);
-// if 'ref' is NULL a new one is allocated, will be freed on deref()
+/*!
+ * Initializes a reference to 'window', with the (optional) kind.
+ * if 'ref' is NULL a new reference is allocated and returned, will be
+ * freed on deref().
+ * 'kind' is an optional arbitrary value that can be used to identify
+ * the reference, it has no meaning to the library.
+ */
 mui_window_ref_t *
 mui_window_ref(
 		mui_window_ref_t *		ref,
@@ -301,7 +325,9 @@ mui_window_deref(
 
 typedef struct mui_listbox_elem_t {
 	uint32_t 					disabled : 1;
-	char 						icon[8];
+	// currently this is a UTF8 string using the 'icons' font
+	char 						icon[8];	// UTF8 icon
+	// default 'LDEF' is to draw the 'elem' string
 	void * 						elem; // char * or... ?
 } mui_listbox_elem_t;
 
@@ -329,13 +355,14 @@ typedef bool (*mui_wdef_p)(
 			uint8_t 		what,
 			void * 			param);
 enum mui_cdef_e {
-	MUI_CDEF_INIT = 0,
-	MUI_CDEF_DISPOSE,
-	MUI_CDEF_DRAW,
-	MUI_CDEF_EVENT,
-	MUI_CDEF_SET_STATE,
-	MUI_CDEF_SET_VALUE,
-	MUI_CDEF_SET_TITLE,
+	MUI_CDEF_INIT = 0,	// param is NULL
+	MUI_CDEF_DISPOSE,	// param is NULL
+	MUI_CDEF_DRAW,		// param is mui_drawable_t*
+	MUI_CDEF_EVENT,		// param is mui_event_t*
+	MUI_CDEF_SET_STATE,	// param is int*
+	MUI_CDEF_SET_VALUE,	// param is int*
+	MUI_CDEF_SET_FRAME,	// param is c2_rect_t*
+	MUI_CDEF_SET_TITLE,	// param is char * (utf8)
 	// Used when hot-key is pressed, change control value
 	// to simulate a click
 	MUI_CDEF_SELECT,
@@ -347,21 +374,23 @@ typedef bool (*mui_cdef_p)(
 				struct mui_control_t * 	c,
 				uint8_t 	what,
 				void * 		param);
+
+/* This is currently unused */
 typedef void (*mui_ldef_p)(
 				struct mui_control_t * 	c,
 				uint32_t 	elem_index,
 				struct mui_listbox_elem_t * elem);
 
-/*
+/*!
  * Timer callback definition. Behaves in a pretty standard way; the timer
  * returns 0 to be cancelled (for one shot timers for example) or return
- * the delay to the next call.
+ * the delay to the next call (that will be added to 'now' to get the next)
  */
 typedef mui_time_t (*mui_timer_p)(
 				struct mui_t * mui,
 				mui_time_t 	now,
 				void * 		param);
-/*
+/*!
  * Actions are the provided way to add custom response to events for the
  * application; action handlers are called for a variety of things, from clicks
  * in controls, to menu selections, to window close etc.
@@ -371,7 +400,7 @@ typedef mui_time_t (*mui_timer_p)(
  * the 'what' action (hopefully documented with that action constant)
  *
  * the 'cb_param' is specific to this action function pointer and is passed as
- * is to the callback.
+ * is to the callback, this is the pointer you pass to mui_window_add_action()
  */
 typedef int (*mui_window_action_p)(
 				struct mui_window_t * win,
@@ -405,7 +434,9 @@ struct cg_ctx_t;
 
 /*
  * Describes a pixmap.
- * And really, only bpp:32 for ARGB is supported, OR 8bpp for alpha masks.
+ * And really, only bpp:32 for ARGB is supported if you want to use 'cg' to draw
+ * on it,
+ * 8bpp is also used for alpha masks, in which case only the pixman API is used.
  * (Alpha mask is used for text rendering)
  */
 typedef struct mui_pixmap_t {
@@ -429,8 +460,10 @@ DECLARE_C_ARRAY(mui_region_t, mui_clip_stack, 2);
  *
  * Important note: the cg vectorial library coordinate system is placed on the
  * space *between* pixels, ie, if you moveto(1,1) and draw a line down, you
- * will light up pixels in columns zero AND one. This differs significantly from
- * for example, pixman that is uses pixel coordinates on hard pixels.
+ * will light up pixels in columns zero AND one (at half transparency).
+ * This differs significantly from for example, pixman that is uses pixel
+ * coordinates on hard pixels.
+ *
  * It's worth remembering as if you draw for example around the border of a
  * control, it will very likely be 'clipped' somewhat because half the pixels
  * are technically outside the control bounding/clipping rectangle.
@@ -634,7 +667,8 @@ typedef enum mui_text_e {
 	MUI_TEXT_ALIGN_TOP		= 0,
 	MUI_TEXT_ALIGN_MIDDLE	= (MUI_TEXT_ALIGN_CENTER << 2),
 	MUI_TEXT_ALIGN_BOTTOM	= (MUI_TEXT_ALIGN_RIGHT << 2),
-	MUI_TEXT_ALIGN_COMPACT	= (1 << 5),	// compact line spacing
+	MUI_TEXT_ALIGN_FULL		= (1 << 5),
+	MUI_TEXT_ALIGN_COMPACT	= (1 << 6),	// compact line spacing
 	MUI_TEXT_DEBUG			= (1 << 7),
 	MUI_TEXT_STYLE_BOLD		= (1 << 8),	// Synthetic (ugly) bold
 	MUI_TEXT_STYLE_ULINE	= (1 << 9), // Underline
@@ -672,6 +706,7 @@ typedef struct mui_glyph_t {
 } mui_glyph_t;
 
 DECLARE_C_ARRAY(mui_glyph_t, mui_glyph_array, 8,
+		uint line_break : 1;
 		int x, y, t, b; float w;);
 DECLARE_C_ARRAY(mui_glyph_array_t, mui_glyph_line_array, 8,
 		uint margin_left, margin_right,	// minimum x, and max width
@@ -680,7 +715,7 @@ DECLARE_C_ARRAY(mui_glyph_array_t, mui_glyph_line_array, 8,
 /*
  * Measure a text string, return the number of lines, and each glyphs
  * position already aligned to the MUI_TEXT_ALIGN_* flags.
- * Note that the 'compact' and 'narrow' flags are used here,
+ * Note that the 'compact', 'narrow' flags are used here,
  * the 'compact' flag is used to reduce the line spacing, and the
  * 'narrow' flag is used to reduce the advance between glyphs.
  */
@@ -1035,6 +1070,10 @@ void
 mui_control_inval(
 		mui_control_t * c );
 void
+mui_control_set_frame(
+		mui_control_t * c,
+		c2_rect_t *		frame );
+void
 mui_control_action(
 		mui_control_t * c,
 		uint32_t 		what,
@@ -1132,11 +1171,19 @@ mui_textedit_set_selection(
 		uint			start,
 		uint			end);
 
+/* Page step and line step are optional, they default to '30' pixels and
+ * the 'visible' area of the scrollbar, respectively.
+ * If you want to for example have a scrollbar that scrolls by 5 when you
+ * click the arrows, and by 20 when you click the bar, you would set the
+ * line_step to 5, and the page_step to 20.
+ */
 mui_control_t *
 mui_scrollbar_new(
 		mui_window_t * 	win,
 		c2_rect_t 		frame,
-		uint32_t 		uid );
+		uint32_t 		uid,
+		uint32_t 		line_step,
+		uint32_t 		page_step);
 uint32_t
 mui_scrollbar_get_max(
 		mui_control_t * c);
@@ -1263,7 +1310,10 @@ enum mui_time_e {
 mui_time_t
 mui_get_time();
 
-#define MUI_TIMER_COUNT 64
+#define MUI_TIMER_COUNT 	64
+#define MUI_TIMER_NONE		0xff
+
+typedef uint8_t mui_timer_id_t;
 
 typedef struct mui_timer_group_t {
 	uint64_t 					map;
@@ -1276,12 +1326,13 @@ typedef struct mui_timer_group_t {
 
 /*
  * Register 'cb' to be called after 'delay'. Returns a timer id (0 to 63)
- * or 0xff if no timer is available. The timer function cb can return 0 for a
- * one shot timer, or another delay that will be added to the current stamp
- * for a further call of the timer.
+ * or MUI_TIMER_NONE if no timer is available.
+ * The timer function cb can return 0 for a one shot timer, or another
+ * delay that will be added to the current stamp for a further call
+ * of the timer.
  * 'param' will be also passed to the timer callback.
  */
-uint8_t
+mui_timer_id_t
 mui_timer_register(
 		struct mui_t *	ui,
 		mui_timer_p 	cb,
@@ -1296,7 +1347,7 @@ mui_timer_register(
 mui_time_t
 mui_timer_reset(
 		struct mui_t *	ui,
-		uint8_t 		id,
+		mui_timer_id_t 	id,
 		mui_timer_p 	cb,
 		mui_time_t 		delay);
 
@@ -1329,7 +1380,7 @@ typedef struct mui_t {
 	mui_utf8_t 					clipboard;
 	mui_timer_group_t			timer;
 	// only used by the text editor, as we can only have one carret
-	uint8_t 					carret_timer;
+	mui_timer_id_t				carret_timer;
 	char * 						pref_directory; /* optional */
 } mui_t;
 

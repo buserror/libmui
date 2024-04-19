@@ -32,7 +32,7 @@ c2_polyline_clear(
 int
 c2_polyline_get_segment(
 		c2_polyline_p pl,
-		long ind,
+		unsigned long ind,
 		c2_segment_p o );
 
 void

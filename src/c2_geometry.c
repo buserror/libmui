@@ -298,7 +298,7 @@ c2_polyline_clear(
 int
 c2_polyline_get_segment(
 		c2_polyline_p pl,
-		long ind,
+		unsigned long ind,
 		c2_segment_p o )
 {
 	if (ind > pl->pt.count)
@@ -444,7 +444,7 @@ c2_polyline_array_clip(
 		c2_rect_p clip,
 		c2_polyline_array_p outPoly )
 {
-	for (long poly = 0; poly < pa->count; poly++) {
+	for (unsigned long poly = 0; poly < pa->count; poly++) {
 		c2_polyline_t *p = pa->e[poly];
 		if (!p)
 			break;

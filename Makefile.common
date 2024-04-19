@@ -50,17 +50,23 @@ endif
 # is fully written, and it fails.
 # the ${filter} are there to make the sure object files are linked before the .a
 $(LIB)/%.so : $(OBJ)/%.o $(LIB)/libmui.a | $(O)
+ifeq ($(V),)
 	@echo "  LDSO      $@"
+endif
 	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -shared -fPIC -o $@.temp \
 			${filter %.o, $^} ${filter %.a, $^} $(LDLIBS) && \
 		mv $@.temp $@
 
 $(OBJ)/%.o		: %.c | $(OBJ)
+ifeq ($(V),)
 	@echo "  CC" ${filter -O%, $(CPPFLAGS) $(CFLAGS)} "$<"
+endif
 	$(Q)$(CC) -MMD $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 
 $(BIN)/%			:  | $(BIN)
+ifeq ($(V),)
 	@echo "  LD      $@"
+endif
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 $(O) $(OBJ) $(BIN) $(LIB):

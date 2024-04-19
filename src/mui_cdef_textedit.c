@@ -55,6 +55,31 @@ enum {
 //	MUI_TE_SELECTING_LINES,		// TODO?
 };
 
+/*
+ * This describes a text edit action, either we insert some text at some position,
+ * or we delete some text at some position.
+ * These actions are queued in a TAILQ, so we can undo/redo them.
+ * The text is UTF8, and the position is a BYTE index in the text (not a glyph).
+ *
+ * We preallocate a fixed number of actions, and when we reach the limit, we
+ * start reusing the oldest ones. This limits the number of undo/redo actions
+ * to something sensible.
+ */
+typedef struct mui_te_action_t {
+	TAILQ_ENTRY(mui_te_action_t) self;
+	uint  		insert : 1;			// if not insert, its a delete
+	uint32_t  	position, length;
+	mui_utf8_t 	text;
+} mui_te_action_t;
+
+// action queue
+typedef TAILQ_HEAD(mui_te_action_queue_t, mui_te_action_t) mui_te_action_queue_t;
+
+/*
+ * This describes the selection in the text-edit, it can either be a carret,
+ * or a selection of text. The selection is kept as a start and end glyph index,
+ * and the drawing code calculates the rectangles for the selection.
+ */
 typedef struct mui_sel_t {
 	uint carret: 1;		// carret is visible (if sel.start == end)
 	uint start, end;	// glyph index in text
@@ -152,7 +177,6 @@ _mui_textedit_show_carret(
 	}
 	te->sel.carret = 1;
 	_mui_textedit_refresh_sel(te, NULL);
-
 }
 
 /* Return the line number, and glyph position in line a glyph index */
@@ -352,9 +376,12 @@ _mui_textedit_refresh_sel(
 		sel = &te->sel;
 	for (int i = 0; i < 3; i++) {
 		c2_rect_t r = te->sel.e[i];
-		if (i == 0 && te->sel.start == te->sel.end)
+		if (i == 0 && te->sel.start == te->sel.end) {
 			c2_rect_inset(&r, -1, -1);
-		_mui_textedit_inval(te, r);
+//			printf("refresh_sel: carret %s\n", c2_rect_as_str(&r));
+		}
+		if (!c2_rect_isempty(&r))
+			_mui_textedit_inval(te, r);
 	}
 }
 
@@ -560,7 +587,7 @@ _mui_textedit_select_signed(
 		glyph_end = t;
 	}
 
-	printf("%s %d:%d\n", __func__, glyph_start, glyph_end);
+//	printf("%s %d:%d\n", __func__, glyph_start, glyph_end);
 	c2_rect_t f = te->control.frame;
 	if (te->flags & MUI_CONTROL_TEXTBOX_FRAME)
 		c2_rect_inset(&f, te->margin.x, te->margin.y);
@@ -1042,7 +1069,7 @@ mui_cdef_textedit(
 				mui_control_ref(&c->win->control_focus, c,
 							FCC('T','e','a','c'));
 			/* If we are the first text-edit created, register the timer */
-			if (c->win->ui->carret_timer == 0xff)
+			if (c->win->ui->carret_timer == MUI_TIMER_NONE)
 				c->win->ui->carret_timer = mui_timer_register(c->win->ui,
 							_mui_textedit_carret_timer, NULL,
 							500 * MUI_TIME_MS);

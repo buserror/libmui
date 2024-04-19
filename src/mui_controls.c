@@ -224,6 +224,23 @@ mui_control_event(
 }
 
 void
+mui_control_set_frame(
+		mui_control_t * c,
+		c2_rect_t *		frame )
+{
+	if (!c || !frame)
+		return;
+	c2_rect_t old = c->frame;
+	if (c2_rect_equal(&old, frame))
+		return;
+	mui_control_inval(c);	// old position
+	c->frame = *frame;
+	if (c->cdef && c->cdef(c, MUI_CDEF_SET_FRAME, frame))
+		return;
+	mui_control_inval(c);	// new position
+}
+
+void
 mui_control_inval(
 		mui_control_t * c )
 {

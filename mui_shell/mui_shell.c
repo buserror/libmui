@@ -24,7 +24,7 @@
 #include <xcb/xcb.h>
 #include <xcb/shm.h>
 #include <xcb/xcb_image.h>
-#include <xcb/randr.h>
+//#include <xcb/randr.h>
 
 #if MUI_HAS_XKB
 #include <xcb/xkb.h>
@@ -245,7 +245,7 @@ mui_xcb_init(
 								pix->size.x * pix->size.y * 4, IPC_CREAT | 0666);
 		ui->shm.shmaddr = shmat(ui->shm.shmid, 0, 0);
 		ui->shm.shmseg = xcb_generate_id(ui->xcb);
-		xcb_shm_attach_checked(ui->xcb, ui->shm.shmseg, ui->shm.shmid, 0);
+		cook = xcb_shm_attach_checked(ui->xcb, ui->shm.shmseg, ui->shm.shmid, 0);
 		error = xcb_request_check(ui->xcb, cook);
 		if (error) {
 			fprintf(stderr, "XCB: Error xcb_shm_attach_checked: %d\n",
@@ -380,7 +380,7 @@ mui_xcb_poll(
 			case XCB_BUTTON_PRESS: {
 				xcb_button_press_event_t *m =
 						(xcb_button_press_event_t *)event;
-#if 1
+#if 0
 				printf("%s %s %02x %d at %4dx%4d\n", __func__,
 						(event->response_type & ~0x80) == XCB_BUTTON_PRESS ?
 								"down" : "up",

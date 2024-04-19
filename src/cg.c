@@ -27,6 +27,22 @@
 
 #include "cg.h"
 
+// make this optional on darwin, where the is no weak linking
+#if defined(__APPLE__) && defined(__MACH__)
+#define CG_WEAK_LINKING 0
+#else
+#define CG_WEAK_LINKING 1
+#endif
+
+#if CG_WEAK_LINKING
+#define _cg_stringify(_a) #_a
+#define _cg_und(_b) _cg_stringify(__ ## _b)
+#define cg_weak_alias(_name) \
+	extern __typeof(__##_name) _name __attribute__((weak, alias(_cg_und(_name))))
+#else
+#define cg_weak_alias(_name)
+#endif
+
 #define cg_array_init(array) \
 	do { \
 		array.data = NULL; \
@@ -1431,12 +1447,36 @@ static inline uint32_t interpolate_pixel(uint32_t x, uint32_t a, uint32_t y, uin
 	return x;
 }
 
+#if defined(__AVX2__)
+typedef uint32_t u32_v __attribute__((vector_size(32)));
+#define VEC_ALIGN 31
+#define VEC_ECOUNT 8
+#else
+typedef uint32_t u32_v __attribute__((vector_size(16)));
+#define VEC_ALIGN 15
+#define VEC_ECOUNT 4
+#endif
+
+
 static void __cg_memfill32(uint32_t * dst, uint32_t val, int len)
 {
-	for(int i = 0; i < len; i++)
-		dst[i] = val;
+	// use extensions to do the first part, as long as it is aligned properly
+	while (len > 0 && ((uintptr_t)dst & VEC_ALIGN)) {
+		*dst++ = val;
+		len--;
+	}
+	u32_v v = val - (u32_v){};
+	while (len >= VEC_ECOUNT) {
+		*(u32_v *)dst = v;
+		dst += VEC_ECOUNT; len -= VEC_ECOUNT;
+	}
+	// do the last part
+	while (len > 0) {
+		*dst++ = val;
+		len--;
+	}
 }
-extern __typeof(__cg_memfill32) cg_memfill32 __attribute__((weak, alias("__cg_memfill32")));
+cg_weak_alias(cg_memfill32);
 
 static inline int gradient_clamp(struct cg_gradient_data_t * gradient, int ipos)
 {
@@ -1615,7 +1655,7 @@ static void __cg_comp_solid_source(uint32_t * dst, int len, uint32_t color, uint
 			dst[i] = color + CG_BYTE_MUL(dst[i], ialpha);
 	}
 }
-extern __typeof(__cg_comp_solid_source) cg_comp_solid_source __attribute__((weak, alias("__cg_comp_solid_source")));
+cg_weak_alias(cg_comp_solid_source);
 
 static void __cg_comp_solid_source_over(uint32_t * dst, int len, uint32_t color, uint32_t alpha)
 {
@@ -1632,7 +1672,7 @@ static void __cg_comp_solid_source_over(uint32_t * dst, int len, uint32_t color,
 			dst[i] = color + CG_BYTE_MUL(dst[i], ialpha);
 	}
 }
-extern __typeof(__cg_comp_solid_source_over) cg_comp_solid_source_over __attribute__((weak, alias("__cg_comp_solid_source_over")));
+cg_weak_alias(cg_comp_solid_source_over);
 
 static void __cg_comp_solid_destination_in(uint32_t * dst, int len, uint32_t color, uint32_t alpha)
 {
@@ -1642,7 +1682,7 @@ static void __cg_comp_solid_destination_in(uint32_t * dst, int len, uint32_t col
 	for(int i = 0; i < len; i++)
 		dst[i] = CG_BYTE_MUL(dst[i], a);
 }
-extern __typeof(__cg_comp_solid_destination_in) cg_comp_solid_destination_in __attribute__((weak, alias("__cg_comp_solid_destination_in")));
+cg_weak_alias(cg_comp_solid_destination_in);
 
 static void __cg_comp_solid_destination_out(uint32_t * dst, int len, uint32_t color, uint32_t alpha)
 {
@@ -1652,7 +1692,7 @@ static void __cg_comp_solid_destination_out(uint32_t * dst, int len, uint32_t co
 	for(int i = 0; i < len; i++)
 		dst[i] = CG_BYTE_MUL(dst[i], a);
 }
-extern __typeof(__cg_comp_solid_destination_out) cg_comp_solid_destination_out __attribute__((weak, alias("__cg_comp_solid_destination_out")));
+cg_weak_alias(cg_comp_solid_destination_out);
 
 static void __cg_comp_source(uint32_t * dst, int len, uint32_t * src, uint32_t alpha)
 {
@@ -1667,7 +1707,7 @@ static void __cg_comp_source(uint32_t * dst, int len, uint32_t * src, uint32_t a
 			dst[i] = interpolate_pixel(src[i], alpha, dst[i], ialpha);
 	}
 }
-extern __typeof(__cg_comp_source) cg_comp_source __attribute__((weak, alias("__cg_comp_source")));
+cg_weak_alias(cg_comp_source);
 
 static void __cg_comp_source_over(uint32_t * dst, int len, uint32_t * src, uint32_t alpha)
 {
@@ -1696,7 +1736,7 @@ static void __cg_comp_source_over(uint32_t * dst, int len, uint32_t * src, uint3
 		}
 	}
 }
-extern __typeof(__cg_comp_source_over) cg_comp_source_over __attribute__((weak, alias("__cg_comp_source_over")));
+cg_weak_alias(cg_comp_source_over);
 
 static void __cg_comp_destination_in(uint32_t * dst, int len, uint32_t * src, uint32_t alpha)
 {
@@ -1716,7 +1756,7 @@ static void __cg_comp_destination_in(uint32_t * dst, int len, uint32_t * src, ui
 		}
 	}
 }
-extern __typeof(__cg_comp_destination_in) cg_comp_destination_in __attribute__((weak, alias("__cg_comp_destination_in")));
+cg_weak_alias(cg_comp_destination_in);
 
 static void __cg_comp_destination_out(uint32_t * dst, int len, uint32_t * src, uint32_t alpha)
 {
@@ -1736,7 +1776,7 @@ static void __cg_comp_destination_out(uint32_t * dst, int len, uint32_t * src, u
 		}
 	}
 }
-extern __typeof(__cg_comp_destination_out) cg_comp_destination_out __attribute__((weak, alias("__cg_comp_destination_out")));
+cg_weak_alias(cg_comp_destination_out);
 
 typedef void (*cg_comp_solid_function_t)(uint32_t * dst, int len, uint32_t color, uint32_t alpha);
 static const cg_comp_solid_function_t cg_comp_solid_map[] = {

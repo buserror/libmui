@@ -265,8 +265,8 @@ mui_popuptitle_draw(
 	mui_font_t * icons = mui_font_find(win->ui, "icon_small");
 	uint32_t state = mui_control_get_state(c);
 
-	mui_drawable_clip_push(dr, &f);
 	struct cg_ctx_t * cg = mui_drawable_get_cg(dr);
+	mui_drawable_clip_push(dr, &f);
 	c2_rect_t inner = f;
 	c2_rect_inset(&inner, 1, 1);
 	cg_set_line_width(cg, 2);
@@ -296,6 +296,7 @@ mui_popuptitle_draw(
 				loc[1].tl, item.title, 0,
 				mui_control_color[state].text);
 	}
+	// up/down arrow
 	mui_font_text_draw(icons, dr,
 			C2_PT(inner.r - 32 + 8, inner.t + 2), "", 0,
 			mui_control_color[state].text);

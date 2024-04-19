@@ -47,7 +47,7 @@ mui_listbox_draw(
 	c2_rect_offset(&f, win->content.l, win->content.t);
 
 	struct cg_ctx_t * cg = mui_drawable_get_cg(dr);
-	cg_set_line_width(cg, 1);
+	cg_set_line_width(cg, 2);
 	cg_set_source_color(cg, &CG_COLOR(mui_control_color[c->state].frame));
 	cg_rectangle(cg, f.l, f.t,
 					c2_rect_width(&f), c2_rect_height(&f));
@@ -60,8 +60,8 @@ mui_listbox_draw(
 	cg = mui_drawable_get_cg(dr);
 	mui_listbox_control_t *lb = (mui_listbox_control_t *)c;
 	uint32_t top_element = lb->scroll / lb->elem_height;
-	uint32_t bottom_element = top_element + 1 +
-							(c2_rect_height(&f) / lb->elem_height);
+	uint32_t bottom_element = (lb->scroll + c2_rect_height(&f) ) /
+								lb->elem_height;
 //	printf("%s draw from %d to %d\n", __func__, top_element, bottom_element);
 
 	mui_font_t * icons = mui_font_find(win->ui, "icon_small");
@@ -69,7 +69,7 @@ mui_listbox_draw(
 	mui_color_t highlight = win->ui->color.highlight;
 
 	for (uint ii = top_element;
-					ii < lb->elems.count && ii < bottom_element; ii++) {
+					ii < lb->elems.count && ii <= bottom_element; ii++) {
 		c2_rect_t ef = f;
 		ef.b = ef.t + lb->elem_height;
 		c2_rect_offset(&ef, 0, ii * lb->elem_height - lb->scroll);
@@ -331,7 +331,7 @@ mui_listbox_new(
 				win, MUI_CONTROL_LISTBOX, mui_cdef_listbox,
 				lbf, NULL, uid, sizeof(mui_listbox_control_t));
 	mui_listbox_control_t *lb = (mui_listbox_control_t *)c;
-	lb->scrollbar = mui_scrollbar_new(win, sb, 0);
+	lb->scrollbar = mui_scrollbar_new(win, sb, 0, 30, 0);
 	mui_control_set_action(lb->scrollbar, mui_listbox_sbar_action, c);
 	lb->elem_height = main->size + 2;
 
@@ -359,7 +359,7 @@ mui_listbox_prepare(
 		mui_scrollbar_set_max(lb->scrollbar,
 					c2_rect_height(&content));
 		mui_control_set_value(lb->scrollbar, -lb->scroll);
-		mui_scrollbar_set_page(lb->scrollbar, c2_rect_height(&c->frame));
+	//	mui_scrollbar_set_page(lb->scrollbar, c2_rect_height(&c->frame));
 	} else {
 		mui_scrollbar_set_max(lb->scrollbar, 0);
 		mui_control_set_value(lb->scrollbar, 0);

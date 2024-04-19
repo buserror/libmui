@@ -74,7 +74,7 @@ _test_textedit_demo(
 		"Writing to the disk is a load and shift process, a "
 		"little like HIRES pattern outputs but much slower.\n"
 		"Also, the MPU takes a very active role in the loading "
-		"and shifting of disk write data. There are two 8-Htate "
+		"and shifting of disk write data. There are two 8-state "
 		"loops in the WRITE sequence. After initializing the "
 		"WRITE sequence, data is stored in the data register "
 		"at a critical point in the A7' loop. As (quickly "
@@ -175,15 +175,16 @@ _test_static_text_and_boxes(
 				MUI_TEXT_ALIGN_CENTER | MUI_TEXT_ALIGN_COMPACT | debug_frames);
 
 	cf = c2_rect_right_of(&cf, cf.r, margin);
-	c = mui_groupbox_new(w, cf, "Placeholder: ", 0);
+	c = mui_groupbox_new(w, cf, "Justification: ", 0);
 	cb = cf;
 	cb.t += base_size;
 	cb.b = cb.t + base_size * 3;
 	cb.l += margin / 3;
 	cb.r = cf.r - (margin / 3);
 	c = mui_textbox_new(w, cb,
-				"This quick brown fox will probably become Fully Justified, one day.", NULL,
-				MUI_TEXT_STYLE_NARROW | debug_frames);
+				"This quick brown fox is both Narrow, "
+				"and Fully Justified these days.", NULL,
+				MUI_TEXT_STYLE_NARROW | MUI_TEXT_ALIGN_FULL | debug_frames);
 }
 
 /*
@@ -200,7 +201,7 @@ _test_demo_all_controls(
 		return;
 	}
 	c2_pt_t where = {};
-	c2_rect_t wpos = C2_RECT_WH(where.x, where.y, 620, 340);
+	c2_rect_t wpos = C2_RECT_WH(where.x, where.y, 620, 380);
 	if (where.x == 0 && where.y == 0)
 		c2_rect_offset(&wpos,
 			(ui->screen_size.x / 2) - (c2_rect_width(&wpos) / 2),
@@ -267,7 +268,7 @@ _test_demo_all_controls(
 	cf = c2_rect_bottom_of(&cf, cf.b, margin);
 	c2_rect_t lr = cf;
 	lr.r = lr.l + base_size * 3;
-	c = mui_textbox_new(w, lr, "Popup:", NULL, MUI_TEXT_ALIGN_RIGHT);
+	c = mui_textbox_new(w, lr, "Popup:", NULL, MUI_TEXT_ALIGN_LEFT);
 	cf = c2_rect_right_of(&cf, lr.r, 0);
 	//c2_rect_offset(&cf, 0, -cf.t + margin);
 	cf.b = cf.t + 34;
@@ -284,7 +285,7 @@ _test_demo_all_controls(
 
 	lr = c2_rect_bottom_of(&lr, lr.b, margin/4);
 	lr.r = lr.l + base_size * 3;
-	c = mui_textbox_new(w, lr, "Icons:", NULL, MUI_TEXT_ALIGN_RIGHT);
+	c = mui_textbox_new(w, lr, "Icons:", NULL, MUI_TEXT_ALIGN_LEFT);
 
 	cf = c2_rect_bottom_of(&cf, cf.b, margin/4);
 	//c2_rect_offset(&cf, 0, -cf.t + margin);
@@ -298,6 +299,17 @@ _test_demo_all_controls(
 	// popup needs to be NULL terminated, AND prepared()
 	mui_menu_items_add(items, (mui_menu_item_t){.title=NULL });
 	mui_popupmenu_prepare(c);
+
+	lr = c2_rect_bottom_of(&lr, lr.b, margin/4);
+	lr.r = lr.l + base_size * 4.2;
+	c = mui_textbox_new(w, lr, "Scrollbar:", NULL, MUI_TEXT_ALIGN_LEFT);
+	c2_rect_right_of(&cf, lr.r, margin/4);
+	cf = c2_rect_bottom_of(&cf, cf.b, margin/2);
+	cf.b = cf.t + base_size;
+	cf.r = cf.l + 200;
+	c = mui_scrollbar_new(w, cf, 0, 5, 20);
+	mui_scrollbar_set_max(c, 255);
+//	mui_scrollbar_set_page(c, 10);
 
 	cf = second_column;
 	cf.b = cf.t + base_size;
@@ -394,6 +406,8 @@ mui_menu_item_t m_windows_menu[] = {
 			.uid = FCC('s','t','x','t'), },
 	{ .title = "Text Edit (WIP!)…",
 			.uid = FCC('t','x','t','e'), },
+	{ .title = "Demo All Controls…",
+			.uid = FCC('d','e','m','o'), },
 	{ },
 };
 
@@ -453,7 +467,7 @@ _test_menubar_action(
 {
 	cg_ui_t *g = cb_param;
 
-	printf("%s %4.4s\n", __func__, (char*)&what);
+//	printf("%s %4.4s\n", __func__, (char*)&what);
 
 	switch (what) {
 		case MUI_MENUBAR_ACTION_PREPARE: {
@@ -538,9 +552,9 @@ _init(
 	mui_menubar_add_simple(mbar, "Windows",
 								FCC('w','i','n','d'),
 								m_windows_menu);
-//	_test_textedit_demo(ui);
+	_test_textedit_demo(ui);
 //	_test_static_text_and_boxes(ui);
-	_test_demo_all_controls(ui);
+//	_test_demo_all_controls(ui);
 	return g;
 }
 

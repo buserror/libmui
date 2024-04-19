@@ -239,7 +239,7 @@ mui_event_match_key(
 	return true;
 }
 
-uint8_t
+mui_timer_id_t
 mui_timer_register(
 		mui_t *ui,
 		mui_timer_p cb,
@@ -248,21 +248,21 @@ mui_timer_register(
 {
 	if (ui->timer.map == (uint64_t)-1L) {
 		fprintf(stderr, "%s ran out of timers\n", __func__);
-		return -1;
+		return MUI_TIMER_NONE;
 	}
-	//printf("%s: delay %d\n", __func__, delay);
-	int ti = __builtin_ffsl(~ui->timer.map) - 1;
+	mui_timer_id_t ti = __builtin_ffsl(~ui->timer.map) - 1;
+//	printf("%s:%d delay %d\n", __func__, ti, delay);
 	ui->timer.map |= 1 << ti;
 	ui->timer.timers[ti].cb = cb;
 	ui->timer.timers[ti].param = param;
 	ui->timer.timers[ti].when = mui_get_time() + delay;
-	return 0;
+	return ti;
 }
 
 mui_time_t
 mui_timer_reset(
 		struct mui_t *	ui,
-		uint8_t 		id,
+		mui_timer_id_t 	id,
 		mui_timer_p 	cb,
 		mui_time_t 		delay)
 {
@@ -270,7 +270,7 @@ mui_timer_reset(
 		return 0;
 	if (!(ui->timer.map & (1L << id)) ||
 				ui->timer.timers[id].cb != cb) {
-	//	printf("%s: timer %d not active\n", __func__, id);
+	//	printf("%s:%d not active\n", __func__, id);
 		return 0;
 	}
 	mui_time_t res = 0;
@@ -280,7 +280,7 @@ mui_timer_reset(
 	ui->timer.timers[id].when = now + delay;
 	if (delay == 0) {
 		ui->timer.map &= ~(1L << id);
-	//	printf("%s: timer %d removed\n", __func__, id);
+	//	printf("%s: %d removed\n", __func__, id);
 	}
 	return res;
 }
