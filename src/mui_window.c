@@ -120,7 +120,7 @@ mui_wdef_titlewindow(
 				if (win->control_focus.control->cdef)
 					win->control_focus.control->cdef(
 								win->control_focus.control,
-								MUI_CDEF_ACTIVATE, &activate);
+								MUI_CDEF_FOCUS, &activate);
 			}
 			break;
 		case MUI_WDEF_DESELECT:
@@ -129,7 +129,7 @@ mui_wdef_titlewindow(
 				if (win->control_focus.control->cdef)
 					win->control_focus.control->cdef(
 								win->control_focus.control,
-								MUI_CDEF_ACTIVATE, &activate);
+								MUI_CDEF_FOCUS, &activate);
 			}
 			break;
 		case MUI_WDEF_DISPOSE:
@@ -256,6 +256,10 @@ mui_window_draw(
 	mui_drawable_clip_pop(dr);
 }
 
+/*
+ * Keys are passed first to the control that is in focus (if any), then
+ * to all the others in sequence until someone handles it (or not).
+ */
 bool
 mui_window_handle_keyboard(
 		mui_window_t *win,
@@ -273,12 +277,20 @@ mui_window_handle_keyboard(
 	/*
 	 * Start with the control in focus, if there's any
 	 */
-	mui_control_t * c = win->control_focus.control, *safe;
-	TAILQ_FOREACH_FROM_SAFE(c, &win->controls, self, safe) {
+	mui_control_t * first = win->control_focus.control ?
+								win->control_focus.control :
+								TAILQ_FIRST(&win->controls);
+	mui_control_t * c = first;
+	while (c) {
 		if (mui_control_event(c, event)) {
-//			printf("%s control %s handled it\n", __func__, c->title);
+		//	printf("%s control %s handled it\n", __func__, c->title);
 			return true;
 		}
+		c = TAILQ_NEXT(c, self);
+		if (!c)
+			c = TAILQ_FIRST(&win->controls);
+		if (c == first)
+			break;
 	}
 	return false;
 }
@@ -380,6 +392,8 @@ mui_window_handle_mouse(
 		}	break;
 		case MUI_EVENT_MOUSEENTER:
 		case MUI_EVENT_MOUSELEAVE:
+			break;
+		default:
 			break;
 	}
 //	printf("MOUSE %s button %d\n", __func__, event->mouse.button);

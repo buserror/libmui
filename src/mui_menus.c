@@ -321,6 +321,8 @@ mui_menubar_handle_mouse(
 				return true;
 			}
 		}	break;
+		default:
+			break;
 	}
 	return false;
 }
@@ -418,6 +420,8 @@ mui_wdef_menubar(
 					if (mui_menubar_handle_keydown(mbar, ev))
 						return true;
 				}	break;
+				default:
+					break;
 			}
 		}	break;
 	}
@@ -513,6 +517,8 @@ mui_menu_handle_mouse(
 				}
 			}
 		}	break;
+		default:
+			break;
 	}
 	return false;
 }
@@ -543,6 +549,8 @@ mui_wdef_menu(
 					if (mui_menu_handle_mouse(menu, ev))
 						return true;
 				}	break;
+				default:
+					break;
 			}
 		}	break;
 	}
@@ -562,6 +570,7 @@ mui_menubar_new(
 								ui, mbf,
 								mui_wdef_menubar, MUI_WINDOW_MENUBAR_LAYER,
 								"Menubar", sizeof(*mbar));
+	mbar->win.flags.style = MUI_MENU_STYLE_MBAR;
 	mui_window_ref(&ui->menubar, &mbar->win, FCC('m','b','a','r'));
 	return &mbar->win;
 }
@@ -644,7 +653,7 @@ mui_menubar_add_menu(
 	} else
 		title_rect.l = 4;
 	title_rect.r = title_rect.l + title_width + 6;
-	title_rect.b = win->content.b + 2;// title_rect.t + m.ascent - m.descent;
+	title_rect.b = win->content.b + 0;// title_rect.t + m.ascent - m.descent;
 
 	mui_control_t * c = mui_control_new(
 				win, MUI_CONTROL_MENUTITLE, mui_cdef_popup,
@@ -706,12 +715,14 @@ mui_menu_get_enclosing_rect(
 	c2_rect_t frame = {};
 	if (!items)
 		return frame;
+	frame.b = 1;	// space for outside frame
 	mui_font_t * main = mui_font_find(ui, "main");
 	stb_ttc_measure m = {};
 	for (int i = 0; items[i].title; i++) {
-		items[i].location = frame.br;
+		items[i].location = frame.b;
 		if (items[i].title && items[i].title[0] != '-') {
 			mui_font_text_measure(main, items[i].title, &m);
+			m.x0 = 0;
 			int title_width = main->size + m.x1 - m.x0 ;
 
 			if (items[i].kcombo[0]) {
@@ -722,11 +733,13 @@ mui_menu_get_enclosing_rect(
 
 			if (title_width > frame.r)
 				frame.r = title_width;
-			frame.b += main->size + 2;
+			items[i].height = main->size + 4;
 		} else {
-			frame.b += main->size / 4;
+			items[i].height = main->size / 4;
 		}
+		frame.b += items[i].height;
 	}
+	frame.b += 1;	// space for outside frame
 	return frame;
 }
 
@@ -747,7 +760,6 @@ _mui_menu_create(
 							items);
 
 	c2_rect_t frame = mui_menu_get_enclosing_rect(ui, items);
-	frame.b += 3;	// tweaked to match the popup frame height
 	c2_rect_t on_screen = frame;
 	c2_rect_offset(&on_screen, origin.x, origin.y);
 
@@ -768,6 +780,7 @@ _mui_menu_create(
 								ui, on_screen,
 								mui_wdef_menu, MUI_WINDOW_MENU_LAYER,
 								items[0].title, sizeof(*menu));
+	menu->win.flags.style = MUI_MENU_STYLE_MENU;
 	if (mbar) {
 		mui_window_ref(&mbar->open[mbar->open_count], &menu->win,
 				FCC('m','e','n','u'));
@@ -780,11 +793,8 @@ _mui_menu_create(
 		mui_menu_item_t * item = &items[i];
 		item->index = i;
 		c2_rect_t title_rect = frame;
-		title_rect.t = item->location.y;
-		if (items[i+1].title)
-			title_rect.b = items[i+1].location.y;
-		else
-			title_rect.b = frame.b;
+		title_rect.t = item->location;
+		title_rect.b = title_rect.t + item->height;
 
 		mui_control_t * c = NULL;
 		if (item->submenu) {
@@ -882,12 +892,14 @@ mui_popupmenu_handle_mouse(
 				c2_pt_t loc = pop->menu_frame.tl;
 				c2_pt_offset(&loc, c->win->content.l, c->win->content.t);
 				if (c->type == MUI_CONTROL_POPUP)
-					c2_pt_offset(&loc, 0, -pop->menu.e[c->value].location.y);
+					c2_pt_offset(&loc, 0, -pop->menu.e[c->value].location);
 				else if (c->type == MUI_CONTROL_POPUP_MARK)
 					c2_pt_offset(&loc, 0, c2_rect_height(&c->frame));
 				mui_window_t *new = _mui_menu_create(
 						c->win->ui, NULL, loc,
 						pop->menu.e);
+				// override the default style to make it specific to a popup
+				new->flags.style = MUI_MENU_STYLE_POPUP;
 				mui_window_ref(&pop->menu_window, new,
 						FCC('m','e','n','u'));
 				mui_window_set_action(pop->menu_window.window,
@@ -897,6 +909,8 @@ mui_popupmenu_handle_mouse(
 			}
 			mui_control_inval(c);
 		}	break;
+		default:
+			break;
 	}
 	return true;
 }
@@ -970,6 +984,8 @@ mui_cdef_popup(
 							break;
 					}
 				}	break;
+				default:
+					break;
 			}
 		}	break;
 	}
@@ -981,14 +997,17 @@ mui_popupmenu_new(
 	mui_window_t *	win,
 	c2_rect_t 		frame,
 	const char * 	title,
-	uint32_t 		uid )
+	uint32_t 		uid,
+	uint32_t		flags )
 {
 	int kind = MUI_CONTROL_POPUP;
 	if (!title || !strcmp(title, MUI_GLYPH_POPMARK))
 		kind = MUI_CONTROL_POPUP_MARK;
-	return mui_control_new(
+	mui_control_t *c =  mui_control_new(
 				win, kind, mui_cdef_popup,
 				frame, title, uid, sizeof(mui_menu_control_t));
+	c->style = flags;
+	return c;
 }
 
 mui_menu_items_t *
@@ -1017,12 +1036,24 @@ mui_popupmenu_prepare(
 		mui_window_deref(&pop->menu_window);
 	}
 	c2_rect_t frame = mui_menu_get_enclosing_rect(c->win->ui, pop->menu.e);
-	pop->menu_frame = frame;
+//	pop->menu_frame = frame;
 	c2_rect_offset(&frame, c->frame.l, c->frame.t);
-	frame.r +=  32; // add the popup symbol width
-	if (c2_rect_width(&frame) < c2_rect_width(&c->frame)) {
-		c2_rect_offset(&frame, (c2_rect_width(&c->frame) / 2) -
-								(c2_rect_width(&frame) / 2), 0);
+	switch (c->type) {
+		case MUI_CONTROL_POPUP:
+			frame.r +=  32; // add the popup symbol width
+			break;
+		case MUI_CONTROL_POPUP_MARK:
+			// little tweak so the popup appears over the bottom border of button
+			c2_rect_offset(&frame, 0, -2);
+			break;
+	}
+	if (c->style & MUI_TEXT_ALIGN_CENTER) {
+		if (c2_rect_width(&frame) < c2_rect_width(&c->frame)) {
+			c2_rect_offset(&frame, (c2_rect_width(&c->frame) / 2) -
+									(c2_rect_width(&frame) / 2), 0);
+		}
+	} else if (c->style & MUI_TEXT_ALIGN_RIGHT) {
+		c2_rect_offset(&frame, c2_rect_width(&c->frame) - c2_rect_width(&frame), 0);
 	}
 	pop->menu_frame = frame;
 	c->value = 0;

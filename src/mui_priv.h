@@ -73,6 +73,13 @@ typedef struct mui_menu_control_t {
 	mui_window_ref_t 		menu_window;	// when open
 } mui_menu_control_t;
 
+// used by mui_wdef_menubar for frame and drawing.
+enum mui_mbar_style_e {
+	MUI_MENU_STYLE_MBAR = 0,
+	MUI_MENU_STYLE_MENU,
+	MUI_MENU_STYLE_POPUP,
+};
+
 void
 mui_wdef_menubar_draw(
 		struct mui_window_t * 	win,

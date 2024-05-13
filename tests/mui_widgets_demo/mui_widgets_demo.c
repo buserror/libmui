@@ -221,10 +221,12 @@ _test_demo_all_controls(
 	c = mui_button_new(w,
 					cf, MUI_BUTTON_STYLE_DEFAULT,
 					"Default", 0);
+	c->key_equ = MUI_KEY_EQU(0, 13); // return
 	cf = c2_rect_left_of(&cf, cf.l, margin);
 	c = mui_button_new(w,
 					cf, MUI_BUTTON_STYLE_NORMAL,
 					"Normal", 0);
+	c->key_equ = MUI_KEY_EQU(0, 32); // space
 	cf = c2_rect_left_of(&cf, cf.l, margin);
 	c = mui_button_new(w,
 					cf, MUI_BUTTON_STYLE_NORMAL,
@@ -272,7 +274,7 @@ _test_demo_all_controls(
 	cf = c2_rect_right_of(&cf, lr.r, 0);
 	//c2_rect_offset(&cf, 0, -cf.t + margin);
 	cf.b = cf.t + 34;
-	c = mui_popupmenu_new(w, cf, "Popup", 0);
+	c = mui_popupmenu_new(w, cf, "Popup", 0, MUI_TEXT_ALIGN_LEFT);
 	mui_menu_items_t *items = mui_popupmenu_get_items(c);
 	mui_menu_items_add(items, (mui_menu_item_t){.title="1200", .uid=1200 });
 	mui_menu_items_add(items, (mui_menu_item_t){.title="2400", .uid=2400 });
@@ -290,7 +292,7 @@ _test_demo_all_controls(
 	cf = c2_rect_bottom_of(&cf, cf.b, margin/4);
 	//c2_rect_offset(&cf, 0, -cf.t + margin);
 	cf.b = cf.t + 34;
-	c = mui_popupmenu_new(w, cf, "Popup", 0);
+	c = mui_popupmenu_new(w, cf, "Popup", 0, MUI_TEXT_ALIGN_LEFT);
 	items = mui_popupmenu_get_items(c);
 	mui_menu_items_add(items,
 			(mui_menu_item_t){.title="Icon", .uid=1200, .icon=MUI_ICON_HARDDISK });
@@ -552,9 +554,9 @@ _init(
 	mui_menubar_add_simple(mbar, "Windows",
 								FCC('w','i','n','d'),
 								m_windows_menu);
-	_test_textedit_demo(ui);
+//	_test_textedit_demo(ui);
 //	_test_static_text_and_boxes(ui);
-//	_test_demo_all_controls(ui);
+	_test_demo_all_controls(ui);
 	return g;
 }
 

@@ -93,8 +93,8 @@ mui_scrollbar_make_rects(
 	float thumb_pos = c->value / ((float)sb->max - sb->visible);
 	float thumb_offset = 0.5 + thumb_pos * (part_size - thumb_size);
 	if (c->type == MUI_CONTROL_H_SCROLL) {
-	printf("%s visible:%.2f ts: %.2f thumb_pos:%.2f thumb_offset:%.2f\n",
-		__func__, visible, thumb_size, thumb_pos, thumb_offset);
+//		printf("%s visible:%.2f ts: %.2f thumb_pos:%.2f thumb_offset:%.2f\n",
+//			__func__, visible, thumb_size, thumb_pos, thumb_offset);
 		part.r = part.l + thumb_size;
 		c2_rect_offset(&part, thumb_offset, 0);
 		if (part.r > parts[MUI_SB_PART_DOWN].l)
@@ -322,7 +322,7 @@ mui_scrollbar_thumb_drag(
 	if (nv > (sb->max - sb->visible))
 		nv = sb->max - sb->visible;
 	c->value = nv;
-	printf("%s nv %3d visible %d max %d\n", __func__, nv,	sb->visible, sb->max);
+	//printf("%s nv %3d visible %d max %d\n", __func__, nv,	sb->visible, sb->max);
 	mui_control_inval(c);
 	mui_control_action(c, MUI_CONTROL_ACTION_VALUE_CHANGED, NULL);
 }
@@ -397,7 +397,6 @@ mui_scrollbar_mouse(
 		}	break;
 		case MUI_EVENT_BUTTONUP: {
 			if (sb->click_hold_timer != 0xff) {
-				printf("Timer %d removed\n", sb->click_hold_timer);
 				mui_timer_reset(c->win->ui,
 						sb->click_hold_timer,
 						_mui_scrollbar_click_hold_timer_cb, 0);
@@ -408,6 +407,8 @@ mui_scrollbar_mouse(
 			mui_control_inval(c);
 			c->flags.hit_part = 0;
 		}	break;
+		default:
+			break;
 	}
 	return true;
 }
@@ -425,7 +426,7 @@ mui_cdef_scrollbar(
 			sb->visible = c->type == MUI_CONTROL_H_SCROLL ?
 							c2_rect_width(&sb->parts[MUI_SB_PART_FRAME]) :
 							c2_rect_height(&sb->parts[MUI_SB_PART_FRAME]);
-			printf("%s visible %d\n", __func__, sb->visible);
+		//	printf("%s visible %d\n", __func__, sb->visible);
 		}	break;
 		case MUI_CDEF_DISPOSE:
 			if (sb->click_hold_timer != 0xff) {
@@ -460,6 +461,8 @@ mui_cdef_scrollbar(
 					_mui_scrollbar_scroll(c, ev->wheel.delta * offset);
 					return true;
 				}	break;
+				default:
+					break;
 			}
 		}	break;
 	}
@@ -480,7 +483,7 @@ mui_scrollbar_set_max(
 {
 	mui_scrollbar_control_t *sb = (mui_scrollbar_control_t *)c;
 	sb->max = max;
-	printf("%s max %3d visible %d\n", __func__, max, sb->visible);
+//	printf("%s max %3d visible %d\n", __func__, max, sb->visible);
 	mui_scrollbar_make_rects(c);
 	mui_control_inval(c);
 }

@@ -40,18 +40,15 @@ mui_button_draw(
 		cg_stroke(cg);
 		c2_rect_inset(&f, BUTTON_INSET, BUTTON_INSET);
 	}
-	mui_font_t * main = TAILQ_FIRST(&win->ui->fonts);
+	mui_font_t * main = mui_font_find(win->ui, "main");
 	stb_ttc_measure m = {};
 	mui_font_text_measure(main, c->title, &m);
 
-	int title_width = m.x1 - m.x0;
-	c2_rect_t title = f;
-	title.t -= 1;
-	title.r = title.l + title_width + 1;
-	title.b = title.t + m.ascent - m.descent;
-	c2_rect_offset(&title, -m.x0 +
-			(int)((c2_rect_width(&f) / 2) - (c2_rect_width(&title)) / 2),
-			(c2_rect_height(&f) / 2) - (c2_rect_height(&title) / 2));
+	int title_width = m.x1;// - m.x0;
+	c2_rect_t title = C2_RECT_WH(0, 0, title_width, m.ascent - m.descent);
+	c2_rect_offset(&title,
+			f.l + ((c2_rect_width(&f) / 2) - (c2_rect_width(&title)) / 2),
+			f.t + (c2_rect_height(&f) / 2) - (c2_rect_height(&title) / 2));
 	mui_drawable_clip_push(dr, &f);
 	cg = mui_drawable_get_cg(dr);
 	c2_rect_t inner = f;
@@ -65,8 +62,9 @@ mui_button_draw(
 //					c2_rect_width(&title), c2_rect_height(&title));
 	cg_set_source_color(cg, &CG_COLOR(mui_control_color[c->state].frame));
 	cg_stroke(cg);
+	// offset for leading space
 	mui_font_text_draw(main, dr,
-			C2_PT(title.l, title.t), c->title, strlen(c->title),
+			C2_PT(title.l - m.x0, title.t), c->title, strlen(c->title),
 			mui_control_color[c->state].text);
 	mui_drawable_clip_pop(dr);
 }
@@ -197,6 +195,8 @@ mui_button_mouse(
 			else
 				mui_control_set_state(c, MUI_CONTROL_STATE_NORMAL);
 		}	break;
+		default:
+			break;
 	}
 	return true;
 }
@@ -238,6 +238,8 @@ mui_cdef_button(
 				case MUI_EVENT_BUTTONDOWN: {
 					return mui_button_mouse(c, ev);
 				}	break;
+				default:
+					break;
 			}
 		}	break;
 		case MUI_CDEF_SELECT: {

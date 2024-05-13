@@ -204,6 +204,8 @@ mui_handle_event(
 				if (!res)
 					printf("    no window handled it\n");
 		}	break;
+		default:
+			break;
 	}
 	return res;
 }

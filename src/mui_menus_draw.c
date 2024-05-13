@@ -82,7 +82,7 @@ mui_menuitem_get_part_locations(
 	} else if (item->mark[0]) {
 		mui_font_text_measure(main, item->mark, &m);
 		c2_pt_t loc = title.tl;
-		loc.x += (main->size / 2) - ((m.x1 - m.x0) / 2);
+		loc.x += m.x0 + (main->size / 2) - ((m.x1 - m.x0) / 2);
 		out[MUI_MENUITEM_PART_ICON].tl = loc;
  	}
 	// this is the 'left margin' for the menu item
@@ -121,7 +121,7 @@ mui_menutitle_get_part_locations(
 
 		out[MUI_MENUTITLE_PART_TITLE] =
 				C2_RECT_WH(out[MUI_MENUTITLE_PART_ICON].r,
-					0, m.x1 - m.x0, m.ascent - m.descent);
+					0, m.x1 - 0, m.ascent - m.descent);
 	}
 	out[MUI_MENUTITLE_PART_ALL] = out[MUI_MENUTITLE_PART_ICON];
 	c2_rect_union(
@@ -265,8 +265,8 @@ mui_popuptitle_draw(
 	mui_font_t * icons = mui_font_find(win->ui, "icon_small");
 	uint32_t state = mui_control_get_state(c);
 
-	struct cg_ctx_t * cg = mui_drawable_get_cg(dr);
 	mui_drawable_clip_push(dr, &f);
+	struct cg_ctx_t * cg = mui_drawable_get_cg(dr);
 	c2_rect_t inner = f;
 	c2_rect_inset(&inner, 1, 1);
 	cg_set_line_width(cg, 2);
@@ -298,7 +298,7 @@ mui_popuptitle_draw(
 	}
 	// up/down arrow
 	mui_font_text_draw(icons, dr,
-			C2_PT(inner.r - 32 + 8, inner.t + 2), "", 0,
+			C2_PT(inner.r - 32 + 8, inner.t + 2), MUI_ICON_POPUP_ARROWS, 0,
 			mui_control_color[state].text);
 	mui_drawable_clip_pop(dr);
 }
@@ -327,17 +327,18 @@ mui_popupmark_draw(
 	c2_rect_inset(&inner, 1, 1);
 	cg_set_line_width(cg, 2);
 	cg_round_rectangle(cg, inner.l, inner.t,
-					c2_rect_width(&inner), c2_rect_height(&inner), 1, 1);
+					c2_rect_width(&inner), c2_rect_height(&inner), 4, 4);
 	cg_set_source_color(cg, &CG_COLOR(mui_control_color[state].fill));
 	cg_fill_preserve(cg);
 	cg_set_source_color(cg, &CG_COLOR(mui_control_color[state].frame));
 	cg_stroke(cg);
+	#if 0
 	cg_move_to(cg, inner.r - 32, inner.t + 2);
 	cg_line_to(cg, inner.r - 32, inner.b - 2);
 	mui_color_t decoColor 	= MUI_COLOR(0x666666ff);
 	cg_set_source_color(cg, &CG_COLOR(decoColor));
 	cg_stroke(cg);
-
+	#endif
 	mui_font_text_draw(main, dr,
 			C2_PT(inner.r - 32 + 8, inner.t + 2), c->title, 0,
 			mui_control_color[state].text);

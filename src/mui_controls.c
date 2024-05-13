@@ -76,6 +76,8 @@ mui_control_new(
 	TAILQ_INSERT_TAIL(&win->controls, c, self);
 	if (c->cdef)
 		c->cdef(c, MUI_CDEF_INIT, NULL);
+	// should we auto-focus the control? not sure..
+//	mui_control_set_focus(c);
 	return c;
 }
 
@@ -219,6 +221,7 @@ mui_control_event(
 				res = true;
 			}
 			break;
+		default: break;
 	}
 	return res;
 }
@@ -406,4 +409,62 @@ mui_control_get_by_id(
 			return c;
 	}
 	return NULL;
+}
+
+bool
+mui_control_set_focus(
+		mui_control_t * c )
+{
+	mui_window_t * 	win = c->win;
+	if (!win || !c)
+		return false;
+	if (!c->cdef || !c->cdef(c, MUI_CDEF_CAN_FOCUS, NULL))
+		return false;
+	if (win->control_focus.control == c)
+		return true;
+	if (win->control_focus.control) {
+		win->control_focus.control->cdef(
+				win->control_focus.control, MUI_CDEF_FOCUS, &(int){0});
+		mui_control_inval(win->control_focus.control);
+		mui_control_deref(&win->control_focus);
+	}
+	mui_control_inval(c);
+	c->cdef(c, MUI_CDEF_FOCUS, &(int){1});
+	mui_control_ref(&c->win->control_focus, c, FCC('T','e','a','c'));
+	return true;
+}
+
+bool
+mui_control_has_focus(
+		mui_control_t * c )
+{
+	if (!c)
+		return false;
+	return c->win->control_focus.control == c;
+}
+
+mui_control_t *
+mui_control_switch_focus(
+		mui_window_t * win,
+		int 			dir )
+{
+	if (!win)
+		return NULL;
+	mui_control_t *c = win->control_focus.control;
+	if (!c)
+		c = TAILQ_FIRST(&win->controls);
+	if (!c)
+		return c;
+	mui_control_t * start = c;
+	do {
+		c = dir > 0 ? TAILQ_NEXT(c, self) : TAILQ_PREV(c, controls, self);
+		if (!c)
+			c = dir > 0 ? TAILQ_FIRST(&win->controls) :
+							TAILQ_LAST(&win->controls, controls);
+		if (c->cdef && c->cdef(c, MUI_CDEF_CAN_FOCUS, NULL))
+			break;
+	} while (c != start);
+	mui_control_set_focus(c);
+	printf("focus %4.4s %s\n", (char*)&c->type, c->title);
+	return c;
 }

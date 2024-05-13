@@ -49,6 +49,8 @@ enum {
 	MUI_CONTROL_TEXTEDIT 		= FCC('T','e','a','c'),
 };
 
+#define D(_w)  ; // _w
+
 enum {
 	MUI_TE_SELECTING_GLYPHS		= 0,
 	MUI_TE_SELECTING_WORDS,
@@ -152,7 +154,8 @@ _mui_textedit_carret_timer(
 	mui_window_t *win = mui_window_front(mui);
 
 //	printf("carret timer win %p focus %p\n", win, win->control_focus);
-	if (win && win->control_focus.control) {
+	if (win && win->control_focus.control &&
+			win->control_focus.control->type == MUI_CONTROL_TEXTEDIT) {
 		mui_textedit_control_t *te =
 				(mui_textedit_control_t *)win->control_focus.control;
 		te->sel.carret = !te->sel.carret;
@@ -397,9 +400,9 @@ _mui_textedit_clamp_text_frame(
 	c2_rect_t old = te->text_content;
 	te->text_content.r = te->text_content.l + te->measure.margin_right;
 	te->text_content.b = te->text_content.t + te->measure.height;
-	printf("  %s %s / %3dx%3d\n", __func__,
+	D(printf("  %s %s / %3dx%3d\n", __func__,
 			c2_rect_as_str(&te->text_content),
-			c2_rect_width(&f), c2_rect_height(&f));
+			c2_rect_width(&f), c2_rect_height(&f));)
 	if (te->text_content.b < c2_rect_height(&f))
 		c2_rect_offset(&te->text_content, 0,
 				c2_rect_height(&f) - te->text_content.b);
@@ -412,8 +415,8 @@ _mui_textedit_clamp_text_frame(
 		c2_rect_offset(&te->text_content, f.l - te->text_content.l, 0);
 	if (c2_rect_equal(&te->text_content, &old))
 		return;
-	printf("   clamped TE from %s to %s\n", c2_rect_as_str(&old),
-			c2_rect_as_str(&te->text_content));
+	D(printf("   clamped TE from %s to %s\n", c2_rect_as_str(&old),
+			c2_rect_as_str(&te->text_content));)
 	mui_control_inval(&te->control);
 }
 
@@ -432,15 +435,15 @@ _mui_textedit_ensure_carret_visible(
 		return;
 	c2_rect_t old = te->text_content;
 	c2_rect_t r = te->sel.first;
-	printf("%s carret %s frame %s\n", __func__,
-			c2_rect_as_str(&r), c2_rect_as_str(&f));
+	D(printf("%s carret %s frame %s\n", __func__,
+			c2_rect_as_str(&r), c2_rect_as_str(&f));)
 	c2_rect_offset(&r, -te->text_content.l, -te->text_content.t);
 	if (r.r < f.l) {
-		printf("   moved TE LEFT %d\n", -(f.l - r.r));
+		D(printf("   moved TE LEFT %d\n", -(f.l - r.r));)
 		c2_rect_offset(&te->text_content, -(f.l - r.l), 0);
 	}
 	if (r.l > f.r) {
-		printf("   moved TE RIGHT %d\n", -(r.l - f.r));
+		D(printf("   moved TE RIGHT %d\n", -(r.l - f.r));)
 		c2_rect_offset(&te->text_content, -(r.l - f.r), 0);
 	}
 	if (r.t < f.t)
@@ -449,8 +452,8 @@ _mui_textedit_ensure_carret_visible(
 		c2_rect_offset(&te->text_content, 0, r.b - f.b);
 	if (c2_rect_equal(&te->text_content, &old))
 		return;
-	printf("   moved TE from %s to %s\n", c2_rect_as_str(&old),
-			c2_rect_as_str(&te->text_content));
+	D(printf("   moved TE from %s to %s\n", c2_rect_as_str(&old),
+			c2_rect_as_str(&te->text_content));)
 	_mui_textedit_clamp_text_frame(te);
 }
 
@@ -629,12 +632,13 @@ mui_textedit_draw(
 	mui_drawable_clip_push(dr, &f);
 	struct cg_ctx_t * cg = mui_drawable_get_cg(dr);
 	if (te->flags & MUI_CONTROL_TEXTBOX_FRAME) {
-		cg_set_line_width(cg, 1);
+		cg_set_line_width(cg, mui_control_has_focus(c) ? 2 : 1);
 		cg_set_source_color(cg, &CG_COLOR(mui_control_color[c->state].frame));
-		cg_rectangle(cg, f.l, f.t,
-						c2_rect_width(&f), c2_rect_height(&f));
+		cg_rectangle(cg, f.l + 0.5, f.t + 0.5,
+						c2_rect_width(&f)-1, c2_rect_height(&f)-1);
 		cg_stroke(cg);
 	}
+//	cg = mui_drawable_get_cg(dr);	// this updates the cg clip too
 	if (te->text.count <= 1)
 		goto done;
 	if (te->flags & MUI_CONTROL_TEXTBOX_FRAME)
@@ -754,18 +758,9 @@ mui_textedit_mouse(
 		case MUI_EVENT_BUTTONDOWN: {
 			if (!c2_rect_contains_pt(&f, &ev->mouse.where))
 				break;
-			// if we aren't the focus, make us the focus
-			if (c != c->win->control_focus.control) {
-				mui_control_t * prev = c->win->control_focus.control;
+			if (!mui_control_has_focus(c))
+				mui_control_set_focus(c);
 
-				mui_cdef_textedit(c, MUI_CDEF_ACTIVATE, &(int){0});
-				mui_control_inval(c);
-				mui_cdef_textedit(prev, MUI_CDEF_ACTIVATE, &(int){1});
-				mui_control_inval(prev);
-				mui_control_deref(&c->win->control_focus);
-				mui_control_ref(&c->win->control_focus, c,
-						FCC('T','e','a','c'));
-			}
 			if (_mui_point_to_line_index(te, te->font, f,
 					ev->mouse.where, &line, &index) == 0) {
 				uint pos = _mui_line_index_to_glyph(
@@ -791,8 +786,8 @@ mui_textedit_mouse(
 				}
 				te->click.start = te->sel.start;
 				te->click.end = te->sel.end;
-				printf("DOWN line %2d index %3d pos:%3d\n",
-						line, index, pos);
+				D(printf("DOWN line %2d index %3d pos:%3d\n",
+						line, index, pos);)
 				res = true;
 			};
 			te->sel.carret = 0;
@@ -801,7 +796,7 @@ mui_textedit_mouse(
 			res = true;
 			if (_mui_point_to_line_index(te, te->font, f,
 					ev->mouse.where, &line, &index) == 0) {
-				printf("UP line %d index %d\n", line, index);
+				D(printf("UP line %d index %d\n", line, index);)
 			}
 			te->sel.carret = 1;
 			_mui_textedit_refresh_sel(te, NULL);
@@ -812,24 +807,24 @@ mui_textedit_mouse(
 				if (te->flags & MUI_CONTROL_TEXTEDIT_VERTICAL) {
 					if (ev->mouse.where.y > f.b) {
 						te->text_content.tl.y -= ev->mouse.where.y - f.b;
-						printf("scroll down %3d\n", te->text_content.tl.y);
+						D(printf("scroll down %3d\n", te->text_content.tl.y);)
 						_mui_textedit_clamp_text_frame(te);
 						mui_control_inval(c);
 					} else if (ev->mouse.where.y < f.t) {
 						te->text_content.tl.y += f.t - ev->mouse.where.y;
-						printf("scroll up   %3d\n", te->text_content.tl.y);
+						D(printf("scroll up   %3d\n", te->text_content.tl.y);)
 						_mui_textedit_clamp_text_frame(te);
 						mui_control_inval(c);
 					}
 				} else {
 					if (ev->mouse.where.x > f.r) {
 						te->text_content.tl.x -= ev->mouse.where.x - f.r;
-						printf("scroll right %3d\n", te->text_content.tl.x);
+						D(printf("scroll right %3d\n", te->text_content.tl.x);)
 						_mui_textedit_clamp_text_frame(te);
 						mui_control_inval(c);
 					} else if (ev->mouse.where.x < f.l) {
 						te->text_content.tl.x += f.l - ev->mouse.where.x;
-						printf("scroll left  %3d\n", te->text_content.tl.x);
+						D(printf("scroll left  %3d\n", te->text_content.tl.x);)
 						_mui_textedit_clamp_text_frame(te);
 						mui_control_inval(c);
 					}
@@ -870,6 +865,8 @@ mui_textedit_mouse(
 			}
 			res = true;
 		}	break;
+		default:
+			break;
 	}
 	return res;
 }
@@ -1015,27 +1012,13 @@ mui_textedit_key(
 			}
 		}	break;
 		case '\t': {
-			// look for the next window control that is a text-edit (loop to
-			// start of necessary, and set it as the focus -- deactivate this one)
-			mui_control_t * next = c;
-			do {
-				next = TAILQ_NEXT(next, self);
-				if (!next)
-					next = TAILQ_FIRST(&c->win->controls);
-				if (next->cdef == mui_cdef_textedit) {
-					mui_cdef_textedit(c, MUI_CDEF_ACTIVATE, &(int){0});
-					mui_control_inval(c);
-					mui_cdef_textedit(next, MUI_CDEF_ACTIVATE, &(int){1});
-					mui_control_inval(next);
-					mui_control_deref(&c->win->control_focus);
-					mui_control_ref(&c->win->control_focus, next,
-							FCC('T','e','a','c'));
-					break;
-				}
-			} while (next != c);
+			mui_control_switch_focus(c->win,
+					ev->modifiers & MUI_MODIFIER_SHIFT ? -1 : 0);
 		}	break;
 		default:
 			printf("%s key 0x%x\n", __func__, ev->key.key);
+			if (ev->key.key == 13 && !(te->flags & MUI_CONTROL_TEXTEDIT_VERTICAL))
+				return false;
 			if (ev->key.key == 13 ||
 						(ev->key.key >= 32 && ev->key.key < 127)) {
 				if (te->sel.start != te->sel.end) {
@@ -1065,18 +1048,14 @@ mui_cdef_textedit(
 	mui_textedit_control_t *te = (mui_textedit_control_t *)c;
 	switch (what) {
 		case MUI_CDEF_INIT: {
-			if (!c->win->control_focus.control)
-				mui_control_ref(&c->win->control_focus, c,
-							FCC('T','e','a','c'));
 			/* If we are the first text-edit created, register the timer */
 			if (c->win->ui->carret_timer == MUI_TIMER_NONE)
 				c->win->ui->carret_timer = mui_timer_register(c->win->ui,
 							_mui_textedit_carret_timer, NULL,
 							500 * MUI_TIME_MS);
-			if (mui_window_isfront(c->win)) {
-				int activate = 1;
-				mui_cdef_textedit(c, MUI_CDEF_ACTIVATE, &activate);
-			}
+			if (mui_window_isfront(c->win) &&
+						c->win->control_focus.control == NULL)
+				mui_control_set_focus(c);
 		}	break;
 		case MUI_CDEF_DRAW: {
 			mui_drawable_t * dr = param;
@@ -1108,9 +1087,14 @@ mui_cdef_textedit(
 				case MUI_EVENT_KEYDOWN: {
 					return mui_textedit_key(c, ev);
 				}	break;
+				default:
+					break;
 			}
 		}	break;
-		case MUI_CDEF_ACTIVATE: {
+		case MUI_CDEF_CAN_FOCUS: {
+			return true;
+		}	break;
+		case MUI_CDEF_FOCUS: {
 		//	int activate = *(int*)param;
 		//	printf("%s activate %d\n", __func__, activate);
 		//	mui_textedit_control_t *te = (mui_textedit_control_t *)c;

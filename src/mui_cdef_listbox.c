@@ -47,7 +47,7 @@ mui_listbox_draw(
 	c2_rect_offset(&f, win->content.l, win->content.t);
 
 	struct cg_ctx_t * cg = mui_drawable_get_cg(dr);
-	cg_set_line_width(cg, 2);
+	cg_set_line_width(cg, mui_control_has_focus(c) ? 2 : 1);
 	cg_set_source_color(cg, &CG_COLOR(mui_control_color[c->state].frame));
 	cg_rectangle(cg, f.l, f.t,
 					c2_rect_width(&f), c2_rect_height(&f));
@@ -79,7 +79,10 @@ mui_listbox_draw(
 			cg_set_source_color(cg, &CG_COLOR(highlight));
 			cg_rectangle(cg, ef.l, ef.t,
 							c2_rect_width(&ef), c2_rect_height(&ef));
-			cg_fill(cg);
+			if (mui_control_has_focus(c))
+				cg_fill(cg);
+			else
+				cg_stroke(cg);
 		}
 		ef.l += 8;
 		mui_listbox_elem_t *e = &lb->elems.e[ii];
@@ -173,6 +176,18 @@ mui_listbox_key(
 		case MUI_KEY_DOWN: 	delta = 1;	break;
 		case MUI_KEY_PAGEUP:	delta = -page_size; break;
 		case MUI_KEY_PAGEDOWN:	delta = page_size; break;
+		case '\t':
+			mui_control_switch_focus(c->win,
+					ev->modifiers & MUI_MODIFIER_SHIFT ? -1 : 0);
+			break;
+#if 0
+		case 13: // enter
+			mui_control_action(c, MUI_CONTROL_ACTION_SELECT,
+						&lb->elems.e[c->value]);
+#endif
+			break;
+		default:
+			break;
 	}
 	if (!delta)
 		return false;
@@ -208,13 +223,15 @@ mui_listbox_key(
 }
 
 static bool
-mui_cdef_event(
+mui_listbox_cdef_event(
 		struct mui_control_t * 	c,
 		mui_event_t *ev)
 {
 	mui_listbox_control_t *lb = (mui_listbox_control_t *)c;
 	switch (ev->type) {
 		case MUI_EVENT_BUTTONDOWN: {
+			if (!mui_control_has_focus(c))
+				mui_control_set_focus(c);
 			c2_rect_t f = c->frame;
 			c2_rect_offset(&f, c->win->content.l, c->win->content.t);
 		//	uint32_t page_size = (c2_rect_height(&f) / lb->elem_height)-1;
@@ -245,9 +262,9 @@ mui_cdef_event(
 			}
 			return true;
 		}	break;
-		case MUI_EVENT_KEYUP: {
-			if (mui_listbox_key(c, ev))
-				return true;
+		case MUI_EVENT_KEYDOWN: {
+		//	printf("%s key %d\n", __func__, ev->key.key);
+			return mui_listbox_key(c, ev);
 		}	break;
 		case MUI_EVENT_WHEEL: {
 		//	printf("%s wheel delta %d\n", __func__, ev->wheel.delta);
@@ -263,6 +280,8 @@ mui_cdef_event(
 			mui_control_inval(c);
 			return true;
 		}	break;
+		default:
+			break;
 	}
 	return false;
 }
@@ -276,6 +295,9 @@ mui_cdef_listbox(
 	mui_listbox_control_t *lb = (mui_listbox_control_t *)c;
 	switch (what) {
 		case MUI_CDEF_INIT:
+			if (mui_window_isfront(c->win) &&
+						c->win->control_focus.control == NULL)
+				mui_control_set_focus(c);
 			break;
 		case MUI_CDEF_DISPOSE:
 			// strings for the elements are not owned by the listbox
@@ -287,7 +309,14 @@ mui_cdef_listbox(
 		}	break;
 		case MUI_CDEF_EVENT: {
 			mui_event_t *ev = param;
-			return mui_cdef_event(c, ev);
+			return mui_listbox_cdef_event(c, ev);
+		}	break;
+		case MUI_CDEF_CAN_FOCUS: {
+			return true;
+		}	break;
+		case MUI_CDEF_FOCUS: {
+		//	int activate = *(int*)param;
+		//	printf("%s activate %d\n", __func__, activate);
 		}	break;
 	}
 	return false;

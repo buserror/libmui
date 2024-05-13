@@ -55,7 +55,7 @@ typedef unsigned int uint;
 #define FCC_INDEXED(_fcc, _idx) \
 			((_fcc & FCC_MASK) | ('0'+((_idx) & 0xff)) << (ffs(~FCC_MASK)-1))
 
-enum mui_event_e {
+typedef enum mui_event_e {
 	MUI_EVENT_KEYUP = 0,
 	MUI_EVENT_KEYDOWN,
 	MUI_EVENT_BUTTONUP,
@@ -73,9 +73,9 @@ enum mui_event_e {
 	MUI_EVENT_COUNT,
 	// left, middle, right buttons for clicks
 	MUI_EVENT_BUTTON_MAX = 3,
-};
+} mui_event_e;
 
-enum mui_key_e {
+typedef enum mui_key_e {
 	// these are ASCII
 	MUI_KEY_ESCAPE 	= 0x1b,
 	MUI_KEY_SPACE 	= 0x20,
@@ -83,42 +83,24 @@ enum mui_key_e {
 	MUI_KEY_TAB 	= 0x09,
 	MUI_KEY_BACKSPACE = 0x08,
 	// these are not ASCII
-	MUI_KEY_LEFT 	= 0x80,
-	MUI_KEY_UP,
-	MUI_KEY_RIGHT,
-	MUI_KEY_DOWN,
-	MUI_KEY_INSERT,
-	MUI_KEY_DELETE,
-	MUI_KEY_HOME,
-	MUI_KEY_END,
-	MUI_KEY_PAGEUP,
-	MUI_KEY_PAGEDOWN,
+	MUI_KEY_LEFT 	= 0x80,	MUI_KEY_UP,	MUI_KEY_RIGHT,	MUI_KEY_DOWN,
+	MUI_KEY_INSERT,		MUI_KEY_DELETE,
+	MUI_KEY_HOME,		MUI_KEY_END,
+	MUI_KEY_PAGEUP,		MUI_KEY_PAGEDOWN,
 	MUI_KEY_MODIFIERS = 0x90,
 	MUI_KEY_LSHIFT 	= MUI_KEY_MODIFIERS,
 	MUI_KEY_RSHIFT,
-	MUI_KEY_LCTRL,
-	MUI_KEY_RCTRL,
-	MUI_KEY_LALT,
-	MUI_KEY_RALT,
-	MUI_KEY_LSUPER,
-	MUI_KEY_RSUPER,
+	MUI_KEY_LCTRL,		MUI_KEY_RCTRL,
+	MUI_KEY_LALT,		MUI_KEY_RALT,
+	MUI_KEY_LSUPER,		MUI_KEY_RSUPER,
 	MUI_KEY_CAPSLOCK,
 	MUI_KEY_MODIFIERS_LAST,
-	MUI_KEY_F1 		= 0x100,
-	MUI_KEY_F2,
-	MUI_KEY_F3,
-	MUI_KEY_F4,
-	MUI_KEY_F5,
-	MUI_KEY_F6,
-	MUI_KEY_F7,
-	MUI_KEY_F8,
-	MUI_KEY_F9,
-	MUI_KEY_F10,
-	MUI_KEY_F11,
-	MUI_KEY_F12,
-};
+	MUI_KEY_F1 = 0x100,	MUI_KEY_F2,	MUI_KEY_F3,	MUI_KEY_F4,
+	MUI_KEY_F5,			MUI_KEY_F6,	MUI_KEY_F7,	MUI_KEY_F8,
+	MUI_KEY_F9,			MUI_KEY_F10,MUI_KEY_F11,MUI_KEY_F12,
+} mui_key_e;
 
-enum mui_modifier_e {
+typedef enum mui_modifier_e {
 	MUI_MODIFIER_LSHIFT 	= (1 << (MUI_KEY_LSHIFT - MUI_KEY_MODIFIERS)),
 	MUI_MODIFIER_RSHIFT 	= (1 << (MUI_KEY_RSHIFT - MUI_KEY_MODIFIERS)),
 	MUI_MODIFIER_LCTRL 		= (1 << (MUI_KEY_LCTRL - MUI_KEY_MODIFIERS)),
@@ -134,7 +116,7 @@ enum mui_modifier_e {
 	MUI_MODIFIER_CTRL 		= (MUI_MODIFIER_LCTRL | MUI_MODIFIER_RCTRL),
 	MUI_MODIFIER_ALT 		= (MUI_MODIFIER_LALT | MUI_MODIFIER_RALT),
 	MUI_MODIFIER_SUPER 		= (MUI_MODIFIER_LSUPER | MUI_MODIFIER_RSUPER),
-};
+} mui_modifier_e;
 
 /*
  * The following constants are in UTF8 format, and relate to glyphs in
@@ -194,12 +176,12 @@ typedef uint64_t mui_time_t;
  * course, which allows the menu to detect key combos, first.
  */
 typedef struct mui_event_t {
-	uint8_t 			type;
+	mui_event_e 		type;
 	mui_time_t 			when;
-	uint32_t 			modifiers;
+	mui_modifier_e 		modifiers;
 	union {
 		struct key {
-			uint32_t 		key;
+			uint32_t 		key;	// ASCII or mui_key_e
 			bool 			up;
 		} 				key;
 		struct {
@@ -368,7 +350,8 @@ enum mui_cdef_e {
 	MUI_CDEF_SELECT,
 	// used when a window is selected, to set the focus to the
 	// first control that can accept it
-	MUI_CDEF_ACTIVATE,	// param is int* with 0,1
+	MUI_CDEF_FOCUS,	// param is int* with 0,1
+	MUI_CDEF_CAN_FOCUS,// param is NULL, return true or false
 };
 typedef bool (*mui_cdef_p)(
 				struct mui_control_t * 	c,
@@ -806,6 +789,7 @@ typedef struct mui_window_t {
 		uint						hidden: 1,
 									disposed : 1,
 									layer : 4,
+									style: 4,	// specific to the WDEF
 									hit_part : 8;
 	}							flags;
 	c2_pt_t 					click_loc;
@@ -914,7 +898,8 @@ typedef struct mui_menu_item_t {
 	char 						kcombo[16];		// UTF8 -- display only
 	mui_key_equ_t 				key_equ;		// keystroke to select this item
 	struct mui_menu_item_t *	submenu;
-	c2_pt_t						location;		// calculated by menu creation code
+	c2_coord_t					location;		// calculated by menu creation code
+	c2_coord_t					height;
 } mui_menu_item_t;
 
 /*
@@ -1105,6 +1090,22 @@ void
 mui_control_set_title(
 		mui_control_t * c,
 		const char * 	text );
+/* Sets the focus to control 'c' in that window, return true if that
+ * control was able to take the focus, or false if it wasn't (for example any
+ * control that are not focusable will return false)
+ */
+bool
+mui_control_set_focus(
+		mui_control_t * c );
+/* Returns true if the control has the focus */
+bool
+mui_control_has_focus(
+		mui_control_t * c );
+/* Switch focus to the next/previous control in the window */
+mui_control_t *
+mui_control_switch_focus(
+		mui_window_t * win,
+		int 			dir );
 
 /* Drawable control is just an offscreen buffer (icon, pixel view) */
 mui_control_t *
@@ -1212,13 +1213,18 @@ mui_control_t *
 mui_separator_new(
 		mui_window_t * 	win,
 		c2_rect_t 		frame);
-
+/* Popup menu control.
+ * flags are MUI_TEXT_ALIGN_* -- however this corresponds to the margins
+ * of the popup control itself when placed into it's 'frame' -- the
+ * popup will be placed left,right,center of the frame rectangle depending.
+ */
 mui_control_t *
 mui_popupmenu_new(
 		mui_window_t *	win,
 		c2_rect_t 		frame,
 		const char * 	title,
-		uint32_t 		uid);
+		uint32_t 		uid,
+		uint32_t		flags);
 mui_menu_items_t *
 mui_popupmenu_get_items(
 		mui_control_t * c);

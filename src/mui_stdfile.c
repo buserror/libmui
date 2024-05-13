@@ -43,6 +43,10 @@ typedef struct mui_stdfile_t {
 	char *				current_path;
 	char *				selected_path;
 	string_array_t		pop_path;
+	struct {
+		mui_control_t 		*save_name;
+		mui_control_t 		*create_folder;
+	}					save;
 #ifdef MUI_HAS_REGEXP
 	regex_t 			re;
 #endif
@@ -57,6 +61,8 @@ enum {
 	MUI_STD_FILE_PART_LISTBOX,
 	MUI_STD_FILE_PART_POPUP,
 	MUI_STD_FILE_PART_RECENT,
+	MUI_STD_FILE_PART_NEW,
+	MUI_STD_FILE_PART_SAVE_NAME,
 	MUI_STD_FILE_PART_COUNT,
 };
 
@@ -479,6 +485,8 @@ mui_stdfile_make_window(
 		const char * 	save_filename,
 		uint16_t 		flags )
 {
+	float base_size = mui_font_find(ui, "main")->size;
+	float margin = base_size * 0.7;
 	c2_rect_t wpos = C2_RECT_WH(where.x, where.y, 700, 400);
 	if (where.x == 0 && where.y == 0)
 		c2_rect_offset(&wpos,
@@ -527,18 +535,20 @@ mui_stdfile_make_window(
 		}
 		free(dup);
 	}
+	bool save_box = false;
+
 	mui_control_t * c = NULL;
 	c2_rect_t cf;
 	cf = C2_RECT_WH(0, 0, 120, 40);
-	c2_rect_left_of(&cf, c2_rect_width(&w->content), 20);
-	c2_rect_top_of(&cf, c2_rect_height(&w->content), 20);
+	c2_rect_left_of(&cf, c2_rect_width(&w->content), margin);
+	c2_rect_top_of(&cf, c2_rect_height(&w->content), margin);
 	std->cancel = c = mui_button_new(w,
 					cf, MUI_BUTTON_STYLE_NORMAL,
 					"Cancel", MUI_STD_FILE_PART_CANCEL);
-	c2_rect_top_of(&cf, cf.t, 20);
+	c2_rect_top_of(&cf, cf.t, margin);
 	std->ok = c = mui_button_new(w,
 					cf, MUI_BUTTON_STYLE_DEFAULT,
-					"Select", MUI_STD_FILE_PART_OK);
+					save_box ? "Save" : "Select", MUI_STD_FILE_PART_OK);
 
 	std->ok->key_equ = MUI_KEY_EQU(0, 13); // return
 	std->cancel->key_equ = MUI_KEY_EQU(0, 27); // ESC
@@ -548,37 +558,59 @@ mui_stdfile_make_window(
 	c2_rect_top_of(&t, cf.t, 25);
 	c = mui_separator_new(w, t);
 
+	int button_spacer = save_box ? margin * 0.7 : margin;
+	int listbox_height = save_box ? 250 : 300;
+
 	c2_rect_top_of(&cf, cf.t, 40);
 	std->home = c = mui_button_new(w,
 					cf, MUI_BUTTON_STYLE_NORMAL,
 					"Home", MUI_STD_FILE_PART_HOME);
 	c->key_equ = MUI_KEY_EQU(MUI_MODIFIER_ALT, 'h');
 
-	c2_rect_top_of(&cf, cf.t, 20);
+	c2_rect_top_of(&cf, cf.t, button_spacer);
 	std->root = c = mui_button_new(w,
 					cf, MUI_BUTTON_STYLE_NORMAL,
 					"Root", MUI_STD_FILE_PART_ROOT);
 	c->key_equ = MUI_KEY_EQU(MUI_MODIFIER_ALT, '/');
 
-	cf = C2_RECT_WH(15, 45, 700-185, 300);
+	if (save_box) {
+		c2_rect_top_of(&cf, cf.t, button_spacer);
+		std->save.create_folder = c = mui_button_new(w,
+						cf, MUI_BUTTON_STYLE_NORMAL,
+						"New…", MUI_STD_FILE_PART_ROOT);
+		c->key_equ = MUI_KEY_EQU(MUI_MODIFIER_ALT, 'n');
+		c->uid = MUI_STD_FILE_PART_NEW;
+	}
+	cf = C2_RECT_WH(margin, 0, c2_rect_width(&wpos)-185, 35);
+	c2_rect_top_of(&cf, c2_rect_height(&w->content), margin);
+	if (save_box) {
+		std->save.save_name = c = mui_textedit_control_new(w,
+									cf, MUI_CONTROL_TEXTBOX_FRAME);
+		c->uid = MUI_STD_FILE_PART_SAVE_NAME;
+		mui_textedit_set_text(c,
+			"Fulling Mill Online Return Center.pdf");
+		mui_textedit_set_selection(c, 0, 255);
+	}
+	cf = C2_RECT_WH(margin, 45, c2_rect_width(&wpos)-185, listbox_height);
 	std->listbox = c = mui_listbox_new(w, cf,
 					MUI_STD_FILE_PART_LISTBOX);
 
-	cf = C2_RECT_WH(15, 0, 700-185, 34);
+	cf = C2_RECT_WH(margin, 0, c2_rect_width(&wpos)-185, 34);
 	c2_rect_top_of(&cf, std->listbox->frame.t, 6);
 	std->popup = c = mui_popupmenu_new(w, cf,
-					"Popup", MUI_STD_FILE_PART_POPUP);
-	cf.r = c2_rect_width(&w->content) - 15;
+					"Popup", MUI_STD_FILE_PART_POPUP,
+					MUI_TEXT_ALIGN_CENTER);
+	cf.r = c2_rect_width(&w->content) - margin;
 	cf.l = cf.r - 34;
 	std->recent = c = mui_popupmenu_new(w, cf,
-					MUI_GLYPH_POPMARK, MUI_STD_FILE_PART_RECENT);
+					MUI_GLYPH_POPMARK, MUI_STD_FILE_PART_RECENT,
+					MUI_TEXT_ALIGN_RIGHT);
 //	mui_control_set_state(c, MUI_CONTROL_STATE_DISABLED);
 //	printf("Popup: %p\n", c);
 	c = NULL;
 	TAILQ_FOREACH(c, &w->controls, self) {
-		if (mui_control_get_uid(c) == 0)
-			continue;
-		mui_control_set_action(c, _mui_stdfile_control_action, std);
+		if (mui_control_get_uid(c))
+			mui_control_set_action(c, _mui_stdfile_control_action, std);
 	}
 	int dopop = 1; // populate to start_path by default
 	if (!(flags & MUI_STDF_FLAG_NOPREF) && ui->pref_directory) {

@@ -26,7 +26,7 @@ MII_UI_OBJ := $(OBJ)/mii_mui_slots.o \
 				$(OBJ)/mii_mui_2dsk.o \
 				$(OBJ)/mii_mui_about.o \
 				$(OBJ)/mii_mui_ssc.o \
-				$(OBJ)/mii_mui_prefs.o
+				$(OBJ)/mii_mui_utils.o
 
 $(LIB)/$(TARGET).so : $(OBJ)/$(TARGET).o $(MII_UI_OBJ)
 $(LIB)/$(TARGET).so : LDLIBS += $(LIB)/libmui.a
