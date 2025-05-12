@@ -30,7 +30,9 @@ MUI_VERSION		:= ${shell \
 CPPFLAGS		+= -DMUI_VERSION="\"$(MUI_VERSION)\""
 
 OPTIMIZE		?= -O0 -g
-CFLAGS			+= --std=gnu99 -Wall -Wextra
+    # "--std=gnu99" works only with gcc/clang
+#CFLAGS			+= --std=gnu99
+CFLAGS			+= -Wall -Wextra
 CFLAGS			+= $(OPTIMIZE)
 CFLAGS			+= -Wno-unused-parameter -Wno-unused-function
 # PIC is necessary for the shared library/plugin to work

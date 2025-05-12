@@ -31,7 +31,11 @@
 #if defined(__APPLE__) && defined(__MACH__)
 #define CG_WEAK_LINKING 0
 #else
+#ifdef __GNUC__
 #define CG_WEAK_LINKING 1
+#else
+#define CG_WEAK_LINKING 0
+#endif
 #endif
 
 #if CG_WEAK_LINKING
@@ -41,6 +45,16 @@
 	extern __typeof(__##_name) _name __attribute__((weak, alias(_cg_und(_name))))
 #else
 #define cg_weak_alias(_name)
+/* avoid build fails, when __attribute__((weak, alias(newname))) is not supported */
+#define cg_memfill32                    __cg_memfill32
+#define cg_comp_solid_source            __cg_comp_solid_source
+#define cg_comp_solid_source_over       __cg_comp_solid_source_over
+#define cg_comp_solid_destination_in    __cg_comp_solid_destination_in
+#define cg_comp_solid_destination_out   __cg_comp_solid_destination_out
+#define cg_comp_source                  __cg_comp_source
+#define cg_comp_source_over             __cg_comp_source_over
+#define cg_comp_destination_in          __cg_comp_destination_in
+#define cg_comp_destination_out         __cg_comp_destination_out
 #endif
 
 #define cg_array_init(array) \
@@ -1447,12 +1461,18 @@ static inline uint32_t interpolate_pixel(uint32_t x, uint32_t a, uint32_t y, uin
 	return x;
 }
 
+
+#ifdef __GNUC__
 #if defined(__AVX2__)
 typedef uint32_t u32_v __attribute__((vector_size(32)));
 #define VEC_ALIGN 31
 #define VEC_ECOUNT 8
 #else
 typedef uint32_t u32_v __attribute__((vector_size(16)));
+#endif
+#endif
+
+#ifndef VEC_ALIGN
 #define VEC_ALIGN 15
 #define VEC_ECOUNT 4
 #endif
@@ -1465,11 +1485,13 @@ static void __cg_memfill32(uint32_t * dst, uint32_t val, int len)
 		*dst++ = val;
 		len--;
 	}
+#ifdef __GNUC__
 	u32_v v = val - (u32_v){};
 	while (len >= VEC_ECOUNT) {
 		*(u32_v *)dst = v;
 		dst += VEC_ECOUNT; len -= VEC_ECOUNT;
 	}
+#endif
 	// do the last part
 	while (len > 0) {
 		*dst++ = val;

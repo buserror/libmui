@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-CC				= gcc
+CC				?= gcc
 
 LIBMUI 			=
 MUI_SRC			:= $(wildcard $(LIBMUI)src/*.c)
